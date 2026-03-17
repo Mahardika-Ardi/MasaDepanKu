@@ -9,12 +9,10 @@ async function StartServer() {
 
     app.listen(process.env.PORT || 3000, () => {
       console.log(
-        chalk.blueBright(
-          `Server Running at http://localhost:${process.env.PORT || 3000}`,
-        ),
+        "Server Running at",
+        chalk.blueBright(`http://localhost:${process.env.PORT || 3000}/`),
       );
       console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-      
     });
   } catch (error) {
     console.log(error);
