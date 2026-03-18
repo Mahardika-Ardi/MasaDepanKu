@@ -4,11 +4,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
 }
 
 model Users {
   id       Int    @id @default(autoincrement())
+  name         String
   email    String @unique
   password String
   role     Role   @default(USER)
@@ -29,7 +30,6 @@ model PhotoProfile {
 model ProfilDetail {
   id           Int    @id @default(autoincrement())
   user_id      Int    @unique
-  name         String
   jurusan      String
   raport_score Json
 

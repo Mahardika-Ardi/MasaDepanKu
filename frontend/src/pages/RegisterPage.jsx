@@ -1,48 +1,58 @@
-import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function RegisterPage() {
-  const navigate = useNavigate()
-  const [showPassword, setShowPassword] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', password: '' })
-  const [status, setStatus] = useState({ loading: false, message: '', error: false })
+  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [status, setStatus] = useState({
+    loading: false,
+    message: "",
+    error: false,
+  });
 
   const isDisabled = useMemo(() => {
-    return status.loading || !form.name || !form.email || form.password.length < 6
-  }, [form, status.loading])
+    return (
+      status.loading || !form.name || !form.email || form.password.length < 6
+    );
+  }, [form, status.loading]);
 
   const handleChange = (event) => {
-    const { name, value } = event.target
-    setForm((prev) => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleRegister = async (event) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    setStatus({ loading: true, message: '', error: false })
+    setStatus({ loading: true, message: "", error: false });
 
     try {
-      const response = await fetch(`${API_BASE_URL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok || !data.Success) {
-        throw new Error(data.Message || 'Register gagal')
+        throw new Error(data.Message || "Register gagal");
       }
 
-      setStatus({ loading: false, message: 'Register berhasil. Silakan login.', error: false })
-      setForm({ name: '', email: '', password: '' })
-      setTimeout(() => navigate('/login'), 700)
+      setStatus({
+        loading: false,
+        message: "Register berhasil. Silakan login.",
+        error: false,
+      });
+      setForm({ name: "", email: "", password: "" });
+      setTimeout(() => navigate("/login"), 700);
     } catch (error) {
-      setStatus({ loading: false, message: error.message, error: true })
+      setStatus({ loading: false, message: error.message, error: true });
     }
-  }
+  };
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#1f2128] px-4 py-10">
@@ -89,7 +99,7 @@ function RegisterPage() {
             <input
               id="password"
               name="password"
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               value={form.password}
               onChange={handleChange}
               placeholder="Kata sandi (6+ karakter)"
@@ -100,7 +110,7 @@ function RegisterPage() {
               onClick={() => setShowPassword((prev) => !prev)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#3a98e6] hover:text-[#64b5f6]"
             >
-              {showPassword ? 'Sembunyikan' : 'Tampilkan'}
+              {showPassword ? "Sembunyikan" : "Tampilkan"}
             </button>
           </div>
 
@@ -108,11 +118,14 @@ function RegisterPage() {
             Dengan mengeklik Setuju & Bergabung, Anda menyetujui
             <span className="text-[#3a98e6]"> Perjanjian Pengguna</span>,
             <span className="text-[#3a98e6]"> Kebijakan Privasi</span>, dan
-            <span className="text-[#3a98e6]"> Kebijakan Cookie</span> MasaDepanKu.id.
+            <span className="text-[#3a98e6]"> Kebijakan Cookie</span>{" "}
+            MasaDepanKu.id.
           </p>
 
           {status.message ? (
-            <p className={`text-sm ${status.error ? 'text-red-400' : 'text-emerald-400'}`}>
+            <p
+              className={`text-sm ${status.error ? "text-red-400" : "text-emerald-400"}`}
+            >
               {status.message}
             </p>
           ) : null}
@@ -123,7 +136,7 @@ function RegisterPage() {
               disabled={isDisabled}
               className="h-[44px] rounded-full bg-[#0c66c2] text-[14px] font-semibold text-white transition hover:bg-[#0a5ab0] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {status.loading ? 'Memproses...' : 'Lanjutkan'}
+              {status.loading ? "Memproses..." : "Lanjutkan"}
             </button>
             <button
               type="button"
@@ -139,13 +152,16 @@ function RegisterPage() {
 
         <p className="mt-7 text-center text-[20px] text-[#b8bcc4]">
           Sudah bergabung di MasaDepanku.id?
-          <Link to="/login" className="ml-1 font-medium text-[#3a98e6] hover:text-[#64b5f6]">
+          <Link
+            to="/login"
+            className="ml-1 font-medium text-[#3a98e6] hover:text-[#64b5f6]"
+          >
             Login
           </Link>
         </p>
       </section>
     </main>
-  )
+  );
 }
 
-export default RegisterPage
+export default RegisterPage;

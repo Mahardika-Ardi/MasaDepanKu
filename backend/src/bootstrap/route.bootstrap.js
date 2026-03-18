@@ -8,12 +8,16 @@ export default function RoutesLoader(app) {
 
   fs.readdirSync(routesPath).forEach(async (file) => {
     if (file.endsWith(".routes.js")) {
+      const s = process.hrtime.bigint();
       const route = await import(`../routes/${file}`);
+      const n = process.hrtime.bigint();
 
-      app.use("/api", route.default);
+      const t = Number(n - s) / 1e6;
+      app.use("/", route.default);
       console.log(
         chalk.hex("#EBB400")(`Loaded Routes API: `),
         chalk.hex("#51ED00")(`[ ${file} ]`),
+        chalk.hex("#9EB02C")(` ${t} ms`),
       );
     }
   });

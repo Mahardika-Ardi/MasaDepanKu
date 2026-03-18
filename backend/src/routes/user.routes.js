@@ -28,7 +28,7 @@ const route = express.Router();
  *         description: Success
  */
 route.get(
-  "/getUsers",
+  "/users/getUsers",
   verifyMiddleware,
   roleCheck("ADMIN"),
   usersController.findall,
@@ -56,7 +56,7 @@ route.get(
  *         description: Success
  */
 route.get(
-  "/getSpecificUser",
+  "/users/getSpecificUser",
   verifyMiddleware,
   roleCheck("ADMIN", "USER"),
   usersController.findone,
@@ -96,7 +96,7 @@ route.get(
  */
 
 route.patch(
-  "/updateUsers/:id",
+  "/users/updateUsers/:id",
   verifyMiddleware,
   roleCheck("ADMIN", "USER"),
   ownerShipCheck,
@@ -123,7 +123,7 @@ route.patch(
  *         description: User not found
  */
 route.delete(
-  "/deleteUser/:id",
+  "/users/deleteUser/:id",
   verifyMiddleware,
   roleCheck("ADMIN", "USER"),
   ownerShipCheck,

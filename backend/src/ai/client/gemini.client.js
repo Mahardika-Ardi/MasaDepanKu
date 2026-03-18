@@ -10,4 +10,14 @@ const ai = new GoogleGenAI({ apiKey });
 
 export async function generateText(prompt, text = {}) {
   const { model = DEFAULT_MODEL, temperature, maxOutputTokens } = options;
+  const respons = await ai.models.generateContent({
+    model,
+    contents: prompt,
+    config: {
+      temperature,
+      maxOutputTokens,
+    },
+  });
+
+  return respons.text;
 }

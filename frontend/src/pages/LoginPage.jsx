@@ -21,11 +21,11 @@ function LoginPage() {
     setStatus({ loading: true, message: '', error: false })
 
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
-      })
+      });
 
       const data = await response.json()
 

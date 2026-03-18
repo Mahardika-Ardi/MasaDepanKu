@@ -5,7 +5,7 @@ const route = express.Router();
 
 /**
  * @swagger
- * /users/register:
+ * /auth/register:
  *   post:
  *     summary: Register new user / make a account
  *     tags: [Auth]
@@ -30,7 +30,7 @@ route.post("/register", authController.register);
 
 /**
  * @swagger
- * /users/login:
+ * /auth/login:
  *   post:
  *     summary: Authorization for user / login API
  *     tags: [Auth]
