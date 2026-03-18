@@ -1,0 +1,13 @@
+import { GoogleGenAI } from "@google/genai";
+
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  throw new Error("Gemini API is not set yet!");
+}
+
+const DEFAULT_MODEL = "gemini-2.5-flash";
+const ai = new GoogleGenAI({ apiKey });
+
+export async function generateText(prompt, text = {}) {
+  const { model = DEFAULT_MODEL, temperature, maxOutputTokens } = options;
+}

@@ -9,14 +9,48 @@ datasource db {
 
 model Users {
   id       Int    @id @default(autoincrement())
-  name     String
   email    String @unique
   password String
   role     Role   @default(USER)
+
+  photoProfiles  PhotoProfile?
+  profilDetail   ProfilDetail?
+  groupQuestions GroupQuestion[]
 }
 
 model PhotoProfile {
-  id Int @id @default(autoincrement())
+  id      Int    @id @default(autoincrement())
+  user_id Int    @unique
+  file    String
+
+  user Users @relation(fields: [user_id], references: [id])
+}
+
+model ProfilDetail {
+  id           Int    @id @default(autoincrement())
+  user_id      Int    @unique
+  name         String
+  jurusan      String
+  raport_score Json
+
+  user Users @relation(fields: [user_id], references: [id])
+}
+
+model GroupQuestion {
+  id      Int @id @default(autoincrement())
+  user_id Int
+
+  questions Question[]
+  user      Users      @relation(fields: [user_id], references: [id])
+}
+
+model Question {
+  id             Int    @id @default(autoincrement())
+  question       String
+  answer         Json
+  group_id       Int
+
+  group_question GroupQuestion @relation(fields: [group_id], references: [id])
 }
 
 enum Role {

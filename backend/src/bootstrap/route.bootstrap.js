@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { cwd } from "process";
+import chalk from "chalk";
 
 export default function RoutesLoader(app) {
   const routesPath = path.join(cwd(), "./src/routes");
@@ -10,7 +11,10 @@ export default function RoutesLoader(app) {
       const route = await import(`../routes/${file}`);
 
       app.use("/api", route.default);
-      console.log(`Loaded Routes API: [ ${file} ]`);
+      console.log(
+        chalk.hex("#EBB400")(`Loaded Routes API: `),
+        chalk.hex("#51ED00")(`[ ${file} ]`),
+      );
     }
   });
 }
