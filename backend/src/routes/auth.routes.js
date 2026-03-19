@@ -26,7 +26,7 @@ const route = express.Router();
  *       201:
  *         description: User created
  */
-route.post("/register", authController.register);
+route.post("/auth/register", authController.register);
 
 /**
  * @swagger
@@ -49,6 +49,6 @@ route.post("/register", authController.register);
  *       200:
  *         description: LogIn Successfully
  */
-route.post("/login", authController.login);
+route.post("/auth/login", authController.login);
 
 export default route;

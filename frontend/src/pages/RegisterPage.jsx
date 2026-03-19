@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
 function RegisterPage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -30,11 +28,14 @@ function RegisterPage() {
     setStatus({ loading: true, message: "", error: false });
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/auth/register`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        },
+      );
 
       const data = await response.json();
 

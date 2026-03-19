@@ -1,6 +1,7 @@
 -- CreateTable
 CREATE TABLE `Users` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
     `email` VARCHAR(191) NOT NULL,
     `password` VARCHAR(191) NOT NULL,
     `role` ENUM('USER', 'ADMIN') NOT NULL DEFAULT 'USER',
@@ -23,7 +24,6 @@ CREATE TABLE `PhotoProfile` (
 CREATE TABLE `ProfilDetail` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `user_id` INTEGER NOT NULL,
-    `name` VARCHAR(191) NOT NULL,
     `jurusan` VARCHAR(191) NOT NULL,
     `raport_score` JSON NOT NULL,
 

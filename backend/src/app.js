@@ -9,8 +9,13 @@ import RoutesLoader from "./bootstrap/route.bootstrap.js";
 export function CreateApp() {
   const app = express();
 
-  // <------ Bellum
-  app.use(cors);
+  app.use(
+    cors({
+      origin: process.env.FRONTEND_URL,
+      methods: ["POST", "PUT", "DELETE", "GET"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    }),
+  );
   app.use(express.json());
   app.use("/api-documentation", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 

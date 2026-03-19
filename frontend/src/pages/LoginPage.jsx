@@ -1,48 +1,54 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 function LoginPage() {
-  const [form, setForm] = useState({ email: '', password: '' })
-  const [status, setStatus] = useState({ loading: false, message: '', error: false })
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [status, setStatus] = useState({
+    loading: false,
+    message: "",
+    error: false,
+  });
 
   const isDisabled = useMemo(() => {
-    return status.loading || !form.email || !form.password
-  }, [form, status.loading])
+    return status.loading || !form.email || !form.password;
+  }, [form, status.loading]);
 
   const handleChange = (event) => {
-    const { name, value } = event.target
-    setForm((prev) => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleLogin = async (event) => {
-    event.preventDefault()
-    setStatus({ loading: true, message: '', error: false })
+    event.preventDefault();
+    setStatus({ loading: true, message: "", error: false });
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        },
+      );
 
-      const data = await response.json()
+      const data = await response.json();
+      localStorage.setItem("token", data.token);
 
       if (!response.ok || !data.Success) {
-        throw new Error(data.Message || 'Login gagal')
+        throw new Error(data.Message || "Login gagal");
       }
 
-      const token = data?.Information?.token
+      const token = data?.Information?.token;
       if (token) {
-        localStorage.setItem('token', token)
+        localStorage.setItem("token", token);
       }
 
-      setStatus({ loading: false, message: 'Login berhasil.', error: false })
+      setStatus({ loading: false, message: "Login berhasil.", error: false });
     } catch (error) {
-      setStatus({ loading: false, message: error.message, error: true })
+      setStatus({ loading: false, message: error.message, error: true });
     }
-  }
+  };
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#1f2128] px-4 py-10">
@@ -83,7 +89,9 @@ function LoginPage() {
           </div>
 
           {status.message ? (
-            <p className={`text-sm ${status.error ? 'text-red-400' : 'text-emerald-400'}`}>
+            <p
+              className={`text-sm ${status.error ? "text-red-400" : "text-emerald-400"}`}
+            >
               {status.message}
             </p>
           ) : null}
@@ -93,19 +101,22 @@ function LoginPage() {
             disabled={isDisabled}
             className="h-[44px] w-full rounded-full bg-[#0c66c2] text-[14px] font-semibold text-white transition hover:bg-[#0a5ab0] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {status.loading ? 'Memproses...' : 'Login'}
+            {status.loading ? "Memproses..." : "Login"}
           </button>
         </form>
 
         <p className="mt-7 text-center text-[18px] text-[#b8bcc4]">
           Belum punya akun?
-          <Link to="/register" className="ml-1 font-medium text-[#3a98e6] hover:text-[#64b5f6]">
+          <Link
+            to="/register"
+            className="ml-1 font-medium text-[#3a98e6] hover:text-[#64b5f6]"
+          >
             Daftar
           </Link>
         </p>
       </section>
     </main>
-  )
+  );
 }
 
-export default LoginPage
+export default LoginPage;
