@@ -8,14 +8,25 @@ if (!apiKey) {
 const DEFAULT_MODEL = "gemini-2.5-flash";
 const ai = new GoogleGenAI({ apiKey });
 
-export async function generateText(prompt, text = {}) {
-  const { model = DEFAULT_MODEL, temperature, maxOutputTokens } = options;
+export async function generateText(prompt, options = {}) {
+  if (!prompt) {
+    throw new Error({
+      message: "Prompt is not set yet",
+      error: error.message,
+    });
+  }
+
+  const {
+    model = DEFAULT_MODEL,
+    temperature = 0.4,
+    maxOutputTokens = 500,
+  } = options;
   const respons = await ai.models.generateContent({
     model,
     contents: prompt,
     config: {
-      temperature,
-      maxOutputTokens,
+      ...(temperature !== undefined && { temperature }),
+      ...(maxOutputTokens !== undefined && { maxOutputTokens }),
     },
   });
 

@@ -1,5 +1,4 @@
-import CreateUsersDto from "../dto/users/create-users.dto.js";
-import UpdateUsersDto from "../dto/users/update-users.dto.js";
+import UpdateUsersDto from "../dto/users/update_users.dto.js";
 import UserService from "../services/users.service.js";
 
 class UserController {

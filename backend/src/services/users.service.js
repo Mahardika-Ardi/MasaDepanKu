@@ -1,5 +1,5 @@
 import prisma from "../config/prisma.config.js";
-import prismaErrors from "../utils/prisma-errors.utils.js";
+import prismaErrors from "../utils/prisma_errors.utils.js";
 
 class UserService {
   async findall(page, limit) {

@@ -1,5 +1,5 @@
 import AuthDto from "../dto/auth/auth.dto.js";
-import CreateUsersDto from "../dto/users/create-users.dto.js";
+import CreateUsersDto from "../dto/users/create_users.dto.js";
 import authService from "../services/auth.service.js";
 
 class AuthController {

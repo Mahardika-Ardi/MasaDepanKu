@@ -2,7 +2,7 @@ import express from "express";
 import usersController from "../controller/users.controller.js";
 import verifyMiddleware from "../middlewares/auth.middleware.js";
 import roleCheck from "../middlewares/role.middleware.js";
-import ownerShipCheck from "../middlewares/ownershipe-check.middleware.js";
+import ownerShipCheck from "../middlewares/ownershipe_check.middleware.js";
 
 const route = express.Router();
 

@@ -1,7 +1,7 @@
 import prisma from "../config/prisma.config.js";
 import { comparePassword, hashPassword } from "../utils/bcrypt.utils.js";
-import { createToken } from "../utils/generate-token.utils.js";
-import prismaErrors from "../utils/prisma-errors.utils.js";
+import { createToken } from "../utils/generate_token.utils.js";
+import prismaErrors from "../utils/prisma_errors.utils.js";
 
 class AuthService {
   async register(data) {

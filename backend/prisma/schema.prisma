@@ -17,6 +17,7 @@ model Users {
   photoProfiles  PhotoProfile?
   profilDetail   ProfilDetail?
   groupQuestions GroupQuestion[]
+  userAnswers    UserAnswer[]
 }
 
 model PhotoProfile {
@@ -45,15 +46,35 @@ model GroupQuestion {
 }
 
 model Question {
-  id       Int    @id @default(autoincrement())
+  id       Int      @id @default(autoincrement())
   question String
   answer   Json
+  category Category
   group_id Int
 
   group_question GroupQuestion @relation(fields: [group_id], references: [id])
+  userAnswers    UserAnswer[]
+}
+
+model UserAnswer {
+  id          Int @id @default(autoincrement())
+  user_id     Int
+  question_id Int
+  value       Int
+
+  user     Users    @relation(fields: [user_id], references: [id])
+  question Question @relation(fields: [question_id], references: [id])
 }
 
 enum Role {
   USER
   ADMIN
+}
+
+enum Category {
+  teknis
+  sosial
+  kreatif
+  analitis
+  manajerial
 }
