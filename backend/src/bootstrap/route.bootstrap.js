@@ -15,7 +15,7 @@ export default function RoutesLoader(app) {
       const t = Number(n - s) / 1e6;
       app.use("/", route.default);
       console.log(
-        chalk.hex("#EBB400")(`Loaded Routes API: `),
+        chalk.hex("#EBB400")("Loaded Routes API:"),
         chalk.hex("#51ED00")(`[ ${file} ]`),
         chalk.hex("#9EB02C")(` ${t} ms`),
       );

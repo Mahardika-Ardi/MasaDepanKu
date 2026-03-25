@@ -18,8 +18,7 @@ class UserController {
     } catch (error) {
       res.status(500).json({
         Success: false,
-        Message:
-          `Error -> ${error.message}` || "Error -> Failed to Get User Data!",
+        Message: "Error -> Failed to Get User Data!",
         Information: null,
         Error: error.code || "BAD_REQUEST",
       });
@@ -46,8 +45,7 @@ class UserController {
     } catch (error) {
       res.status(500).json({
         Success: false,
-        Message:
-          `Error -> ${error.message}` || "Error -> Failed to Get User Data!",
+        Message: "Error -> Failed to Get User Data!",
         Information: null,
         Error: error.code || "BAD_REQUEST",
       });
@@ -68,8 +66,7 @@ class UserController {
     } catch (error) {
       res.status(500).json({
         Success: false,
-        Message:
-          `Error -> ${error.message}` || "Error -> Failed to Get User Data!",
+        Message: "Error -> Failed to Get User Data!",
         Information: null,
         Error: error.code || "BAD_REQUEST",
       });
@@ -89,8 +86,7 @@ class UserController {
     } catch (error) {
       res.status(500).json({
         Success: false,
-        Message:
-          `Error -> ${error.message}` || "Error -> Failed to Register Users",
+        Message: "Error -> Failed to Register Users",
         Information: null,
         Error: error.code || "BAD_REQUEST",
       });

@@ -25,7 +25,7 @@ const fileFilter = (req, file, callbak) => {
   if (allowedTypes.includes(file.mimetype)) {
     callbak(null, true);
   } else {
-    cb(new Error("Only images typed file are allowed"), false);
+    callbak(new Error("Only images typed file are allowed"), false);
   }
 };
 
@@ -42,7 +42,7 @@ const filesFilter = (req, file, callbak) => {
   if (allowedTypes.includes(file.mimetype)) {
     callbak(null, true);
   } else {
-    cb(new Error("Only images typed file are allowed"), false);
+    callbak(new Error("Only images typed file are allowed"), false);
   }
 };
 
@@ -51,7 +51,6 @@ export const multerConfig = multer({
   fileFilter: fileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024,
-    fi,
   },
 });
 
@@ -60,6 +59,5 @@ export const multersConfig = multer({
   fileFilter: filesFilter,
   limits: {
     fileSize: 10 * 1024 * 1024,
-    fi,
   },
 });

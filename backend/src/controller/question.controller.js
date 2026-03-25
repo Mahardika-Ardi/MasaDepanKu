@@ -16,11 +16,12 @@ class QuestionContoller {
     } catch (error) {
       res.status(500).json({
         Success: false,
-        Message:
-          `Error -> ${error.message}` || "Error -> Failed to Register Users",
+        Message: "Error -> Failed to Register Users",
         Information: null,
         Error: error.code || "BAD_REQUEST",
       });
     }
   }
 }
+
+export default new QuestionContoller();
