@@ -32,13 +32,11 @@ function LoginPage() {
         },
       );
 
-      const data = await response.json();
-      localStorage.setItem("token", data.token);
-
       if (!response.ok || !data.Success) {
         throw new Error(data.Message || "Login gagal");
       }
 
+      const data = await response.json();
       const token = data?.Information?.token;
       if (token) {
         localStorage.setItem("token", token);

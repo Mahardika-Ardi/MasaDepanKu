@@ -1,4 +1,4 @@
-import UpdateUsersDto from "../dto/users/update_users.dto.js";
+import { UpdateUsersDto } from "../dto/users/update_users.dto.js";
 import UserService from "../services/users.service.js";
 
 class UserController {
@@ -15,7 +15,6 @@ class UserController {
         Information: result,
         Error: null,
       });
-      console.log(result);
     } catch (error) {
       res.status(500).json({
         Success: false,

@@ -38,7 +38,7 @@ route.get(
  * @swagger
  * /users/getSpecificUser:
  *   get:
- *     summary: Get specific users with pagination systems
+ *     summary: Get specific users with filter systems
  *     tags: [Users]
  *     parameters:
  *       - in: query
@@ -131,3 +131,4 @@ route.delete(
 );
 
 export default route;
+
