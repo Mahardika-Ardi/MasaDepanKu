@@ -7,6 +7,7 @@
   ],
   "scripts": {
     "dev": "concurrently -n BACKEND,FRONTEND -c green,blue \"npm run start:dev -w backend\" \"npm run dev -w frontend\"",
+    "lint": "",
     "start:be": "cd backend && npm run start:dev",
     "start:fe": "cd frontend && npm run dev"
   },
