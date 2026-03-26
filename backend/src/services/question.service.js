@@ -1,30 +1,49 @@
 import prisma from "../config/prisma.config.js";
 import AiService from "./ai.service.js";
+import prismaErrors from "../utils/prisma_errors.utils.js";
 
 class QuestionService {
   async create(data) {
     try {
-      const addGroupQuestion = await prisma.groupQuestion.create({
-        data: { user_id: data.user_id },
+      const generatedQuestion = await AiService.GenerateQuestion();
+
+      const result = await prisma.$transaction(async (tx) => {
+        const addGroupQuestion = await tx.groupQuestion.create({
+          data: { user_id: data.user_id },
+        });
+        const payload = generatedQuestion.map((item) => ({
+          ...item,
+          group_id: addGroupQuestion.id,
+        }));
+
+        await tx.question.createMany({
+          data: payload,
+        });
+
+        const question = await tx.question.findMany({
+          where: { group_id: addGroupQuestion.id },
+          orderBy: { number: "asc" },
+        });
+
+        return {
+          generated_by: addGroupQuestion.user_id,
+          group_question_id: addGroupQuestion.id,
+          question,
+        };
       });
 
-      const addQuestion = (await AiService.GenerateQuestion()).forEach(
-        async (x) => {
-          await prisma.question.create({
-            data: { group_id: addGroupQuestion.id, ...x },
-          });
-        },
-      );
+      if (!result) {
+        throw {
+          message: "Failed generating question, error!",
+          code: "BAD_REQUEST",
+        };
+      }
 
-      console.log(addQuestion);
-
-      return {
-        generated_by: addGroupQuestion.user_id,
-        group_question_id: addGroupQuestion.id,
-        question: addGroupQuestion,
-      };
+      return result;
     } catch (error) {
+      const prismaError = prismaErrors(error);
       console.log(error);
+      throw error || prismaError;
     }
   }
 }

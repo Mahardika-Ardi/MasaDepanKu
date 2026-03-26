@@ -1,6 +1,6 @@
 import express from "express";
-import QuestionService from "../services/question.service.js";
 import verifyMiddleware from "../middlewares/auth.middleware.js";
+import QuestionController from "../controller/question.controller.js";
 
 const route = express.Router();
 
@@ -9,7 +9,7 @@ const route = express.Router();
  * /question/create:
  *   post:
  *     summary: Creating question using AI
- *     tags: [Users]
+ *     tags: [Question]
  *     requestBody:
  *       required: true
  *       content:
@@ -24,6 +24,6 @@ const route = express.Router();
  *       200:
  *         description: Success
  */
-route.post("/question/create", verifyMiddleware, QuestionService.create);
+route.post("/question/create", verifyMiddleware, QuestionController.create);
 
 export default route;
