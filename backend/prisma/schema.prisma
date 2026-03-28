@@ -21,18 +21,18 @@ model Users {
 }
 
 model PhotoProfile {
-  id      Int    @id @default(autoincrement())
-  user_id Int    @unique
-  file    String
+  id      Int     @id @default(autoincrement())
+  user_id Int     @unique
+  file    String?
 
   user Users @relation(fields: [user_id], references: [id])
 }
 
 model ProfilDetail {
-  id           Int    @id @default(autoincrement())
-  user_id      Int    @unique
-  jurusan      String
-  raport_score Json
+  id           Int     @id @default(autoincrement())
+  user_id      Int     @unique
+  jurusan      String?
+  raport_score Json?
 
   user Users @relation(fields: [user_id], references: [id])
 }

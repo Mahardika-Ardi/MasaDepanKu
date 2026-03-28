@@ -30,14 +30,6 @@ class UserService {
         };
       });
 
-      console.log({
-        data: userSafe,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      });
-
       return {
         data: userSafe,
         total,
@@ -57,7 +49,7 @@ class UserService {
 
       if (!find) {
         throw {
-          message: "Failed Getting All User!",
+          message: "Failed Getting User!",
           code: "BAD_REQUEST",
         };
       }
@@ -70,6 +62,8 @@ class UserService {
       };
     } catch (error) {
       const prismaError = prismaErrors(error);
+      console.log(error);
+
       throw error || prismaError;
     }
   }
@@ -79,7 +73,7 @@ class UserService {
 
       if (!updt) {
         throw new Error({
-          message: "Failed Creating Users!",
+          message: "Failed Updating Users Data!",
           code: "BAD_REQUEST",
         });
       }
