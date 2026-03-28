@@ -28,6 +28,8 @@ class ProfilService {
         });
       }
 
+      [...ProfilService];
+
       return find;
     } catch (error) {
       const prismaError = prismaErrors(error);
