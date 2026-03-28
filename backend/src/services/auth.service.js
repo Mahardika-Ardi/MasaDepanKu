@@ -23,6 +23,22 @@ class AuthService {
         });
       }
 
+      const addProfileLink = await prisma.$transaction(async (tx) => {
+        await tx.photoProfile.create({
+          data: { user_id: add.id },
+        });
+        await tx.profilDetail.create({
+          data: { user_id: add.id },
+        });
+      });
+
+      if (!addProfileLink) {
+        throw new Error({
+          message: "Failed Creating Users!",
+          code: "BAD_REQUEST",
+        });
+      }
+
       return {
         id: add.id,
         name: add.name,
@@ -44,7 +60,7 @@ class AuthService {
 
       if (!find) {
         throw new Error({
-          message: "LogIn failed!, try again",
+          message: "LogIn failed invalid credential, try again!",
           code: "BAD_REQUEST",
         });
       }
@@ -53,7 +69,7 @@ class AuthService {
 
       if (!compare) {
         throw new Error({
-          message: "Failed Creating Users!",
+          message: "LogIn failed invalid credential, try again!",
           code: "BAD_REQUEST",
         });
       }

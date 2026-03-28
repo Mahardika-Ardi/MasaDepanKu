@@ -1,10 +1,19 @@
 import multer from "multer";
 import path from "path";
 import { v7 as uuidV7 } from "uuid";
+import fs from "fs";
+import { fileURLToPath } from "url";
+
+const currentfile = fileURLToPath(import.meta.url);
+const currentdir = path.dirname(currentfile);
+const uploadDir = path.join(currentdir, "../uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, callbak) => {
-    callbak(null, "uploads/");
+    callbak(null, uploadDir);
   },
 
   filename: (req, file, callbak) => {
@@ -42,7 +51,7 @@ const filesFilter = (req, file, callbak) => {
   if (allowedTypes.includes(file.mimetype)) {
     callbak(null, true);
   } else {
-    callbak(new Error("Only images typed file are allowed"), false);
+    callbak(new Error("Only some typed file are allowed"), false);
   }
 };
 
