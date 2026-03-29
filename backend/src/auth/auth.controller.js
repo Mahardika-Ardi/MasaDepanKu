@@ -1,4 +1,4 @@
-import { AuthDto } from "./dto/auth_create.dto.js";
+import { AuthDto } from "./dto/auth.dto.js";
 import AuthService from "./auth.service.js";
 
 class AuthController {

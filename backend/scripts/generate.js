@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import fs from "fs";
 import path from "path";
 
@@ -12,10 +13,14 @@ const baseName = name.toLowerCase();
 const basePath = path.join("src", `${baseName}`);
 
 const createFile = (filePath, content) => {
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, content);
-    console.log(`Created: ${filePath}`);
+  if (fs.existsSync(filePath)) {
+    console.log(chalk.red("Failed file is already exist!"));
+    process.exit(0);
   }
+
+  fs.writeFileSync(filePath, content);
+  console.log(chalk.green("Created: "), chalk.hex("#00D4FF")(`${filePath}`));
+  console.log(chalk.green("Done!"));
 };
 
 fs.mkdirSync(basePath, { recursive: true });
@@ -219,11 +224,11 @@ createFile(
   
   const route = express.Router();
   
-  router.post("", ${capitalize(baseName)}Controller.create);
-  router.get("", ${capitalize(baseName)}Controller.findall);
-  router.get("", ${capitalize(baseName)}Controller.findone);
-  router.patch("", ${capitalize(baseName)}Controller.update);
-  router.delete("", ${capitalize(baseName)}Controller.delete);
+  route.post("", ${capitalize(baseName)}Controller.create);
+  route.get("", ${capitalize(baseName)}Controller.findall);
+  route.get("", ${capitalize(baseName)}Controller.findone);
+  route.patch("", ${capitalize(baseName)}Controller.update);
+  route.delete("", ${capitalize(baseName)}Controller.delete);
   
   export default route;
   
@@ -233,5 +238,3 @@ createFile(
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
-
-console.log("Done!");

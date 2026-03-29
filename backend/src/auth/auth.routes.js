@@ -49,6 +49,6 @@ route.post("/auth/register", AuthController.register);
  *       200:
  *         description: LogIn Successfully
  */
-route.post("/auth/login", AuthController.login);
+route.post("/login", AuthController.login);
 
 export default route;

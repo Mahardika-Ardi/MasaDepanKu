@@ -1,13 +1,45 @@
 import express from "express";
-  import ProfileController from "./profile.controller.js";
-  
-  const route = express.Router();
-  
-  router.post("", ProfileController.create);
-  router.get("", ProfileController.findall);
-  router.get("", ProfileController.findone);
-  router.patch("", ProfileController.update);
-  router.delete("", ProfileController.delete);
-  
-  export default route;
-  
+import ProfileController from "./profile.controller.js";
+import verifyMiddleware from "../middlewares/auth.middleware.js";
+import ownerShipCheck from "../middlewares/ownershipe_check.middleware.js";
+import roleCheck from "../middlewares/role.middleware.js";
+
+const route = express.Router();
+
+/**
+ * @swagger
+ * /profile/getSpecific:
+ *   get:
+ *     summary: Get specific profile (based on authenticated user)
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success get profile data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Success:
+ *                   type: boolean
+ *                   example: true
+ *                 Message:
+ *                   type: string
+ *                   example: ""
+ *                 Information:
+ *                   type: object
+ *                 Error:
+ *                   type: string
+ *                   example: null
+ */
+route.get(
+  "/getSpecific",
+  verifyMiddleware,
+  ownerShipCheck,
+  roleCheck("USER"),
+  ProfileController.findone,
+);
+
+export default route;

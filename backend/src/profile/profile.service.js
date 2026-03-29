@@ -5,8 +5,8 @@ class ProfileService {
   async findone(data) {
     try {
       const [findPhoto, findProfileDetail] = await prisma.$transaction([
-        prisma.photoProfile.findFirst({ where: { user_id: data.user_id } }),
-        prisma.profilDetail.findFirst({ where: { user_id: data.user_id } }),
+        prisma.photoProfile.findFirst({ where: { user_id: data } }),
+        prisma.profilDetail.findFirst({ where: { user_id: data } }),
       ]);
 
       if (!findPhoto && findProfileDetail) {

@@ -5,7 +5,7 @@ const options = {
     openapi: "3.0.0",
     info: {
       title: "MasaDepanKu",
-      version: "1.7.3",
+      version: "2.12.7",
       description: "API Documentation for BackEnd MasaDepanKu Project",
     },
     components: {

@@ -24,6 +24,6 @@ const route = express.Router();
  *       200:
  *         description: Success
  */
-route.post("/question/create", verifyMiddleware, QuestionController.create);
+route.post("/create", verifyMiddleware, QuestionController.create);
 
 export default route;
