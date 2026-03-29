@@ -1,5 +1,5 @@
 import express from "express";
-import usersController from "../controller/users.controller.js";
+import UserController from "./user.controller.js";
 import verifyMiddleware from "../middlewares/auth.middleware.js";
 import roleCheck from "../middlewares/role.middleware.js";
 import ownerShipCheck from "../middlewares/ownershipe_check.middleware.js";
@@ -8,7 +8,7 @@ const route = express.Router();
 
 /**
  * @swagger
- * /users/getUsers:
+ * /user/getUsers:
  *   get:
  *     summary: Get users with pagination system
  *     tags: [Users]
@@ -28,15 +28,15 @@ const route = express.Router();
  *         description: Success
  */
 route.get(
-  "/users/getUsers",
+  "/getUsers",
   verifyMiddleware,
   roleCheck("ADMIN"),
-  usersController.findall,
+  UserController.findall,
 );
 
 /**
  * @swagger
- * /users/getSpecificUser:
+ * /user/getSpecificUser:
  *   get:
  *     summary: Get specific users with filter systems
  *     tags: [Users]
@@ -56,15 +56,15 @@ route.get(
  *         description: Success
  */
 route.get(
-  "/users/getSpecificUser",
+  "/getSpecificUser",
   verifyMiddleware,
   roleCheck("ADMIN", "USER"),
-  usersController.findone,
+  UserController.findone,
 );
 
 /**
  * @swagger
- * /users/updateUsers/{id}:
+ * /user/updateUsers/{id}:
  *   patch:
  *     summary: Update user data from aplication
  *     tags: [Users]
@@ -96,16 +96,16 @@ route.get(
  */
 
 route.patch(
-  "/users/updateUsers/:id",
+  "/updateUsers/:id",
   verifyMiddleware,
   roleCheck("ADMIN", "USER"),
   ownerShipCheck,
-  usersController.update,
+  UserController.update,
 );
 
 /**
  * @swagger
- * /users/deleteUser/{id}:
+ * /user/deleteUser/{id}:
  *   delete:
  *     summary: Delete users data from application
  *     tags: [Users]
@@ -123,12 +123,11 @@ route.patch(
  *         description: User not found
  */
 route.delete(
-  "/users/deleteUser/:id",
+  "/deleteUser/:id",
   verifyMiddleware,
   roleCheck("ADMIN", "USER"),
   ownerShipCheck,
-  usersController.delete,
+  UserController.delete,
 );
 
 export default route;
-

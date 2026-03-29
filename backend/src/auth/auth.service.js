@@ -23,14 +23,10 @@ class AuthService {
         });
       }
 
-      const addProfileLink = await prisma.$transaction(async (tx) => {
-        await tx.photoProfile.create({
-          data: { user_id: add.id },
-        });
-        await tx.profilDetail.create({
-          data: { user_id: add.id },
-        });
-      });
+      const addProfileLink = await prisma.$transaction([
+        prisma.photoProfile.create({ data: { user_id: add.id } }),
+        prisma.profilDetail.create({ data: { user_id: add.id } }),
+      ]);
 
       if (!addProfileLink) {
         throw new Error({

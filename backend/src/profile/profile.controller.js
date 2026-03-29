@@ -1,11 +1,9 @@
-import { CreateQuestionDto } from "../dto/question/create_question.js";
-import questionService from "../services/question.service.js";
+import ProfileService from "./profile.service.js";
 
-class QuestionContoller {
-  async create(req, res) {
+class ProfileController {
+  async findone(req, res) {
     try {
-      const validated = CreateQuestionDto.parse(req.body);
-      const result = await questionService.create(validated);
+      const result = await ProfileService.findone(req.user.id);
 
       res.status(200).json({
         Success: true,
@@ -24,4 +22,4 @@ class QuestionContoller {
   }
 }
 
-export default new QuestionContoller();
+export default new ProfileController();

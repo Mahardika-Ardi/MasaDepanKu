@@ -1,5 +1,5 @@
-import { UpdateUsersDto } from "../dto/users/update_users.dto.js";
-import UserService from "../services/users.service.js";
+import { UserUpdateDto } from "./dto/user_update.dto.js";
+import UserService from "./user.service.js";
 
 class UserController {
   async findall(req, res) {
@@ -54,7 +54,7 @@ class UserController {
   async update(req, res) {
     const id = Number(req.params.id);
     try {
-      const validated = UpdateUsersDto.parse(req.body);
+      const validated = UserUpdateDto.parse(req.body);
       const result = await UserService.update(id, validated);
 
       res.status(201).json({

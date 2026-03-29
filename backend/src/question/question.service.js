@@ -1,6 +1,6 @@
 import prisma from "../config/prisma.config.js";
-import AiService from "./ai.service.js";
 import prismaErrors from "../utils/prisma_errors.utils.js";
+import AiService from "../ai/service/ai.service.js";
 
 class QuestionService {
   async create(data) {
