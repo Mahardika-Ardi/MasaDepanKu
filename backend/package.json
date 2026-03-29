@@ -11,7 +11,8 @@
     "start:watch": "nodemon --watch src/server.js",
     "lint": "eslint",
     "lint:fix": "eslint . --fix",
-    "postinstall": "npx prisma generate"
+    "postinstall": "npx prisma generate",
+    "make": "node scripts/generate.js"
   },
   "keywords": [],
   "author": "",

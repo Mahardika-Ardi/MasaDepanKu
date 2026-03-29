@@ -101,11 +101,28 @@ class UserService {
   }
   async delete(id) {
     try {
-      const delt = await prisma.users.delete({ where: { id } });
+      const findGroupQuestion = await prisma.groupQuestion.findFirst({
+        where: { user_id: id },
+      });
+
+      if (!findGroupQuestion) {
+        throw {
+          message: "Failed Finding User!",
+          code: "BAD_REQUEST",
+        };
+      }
+
+      const delt = await prisma.$transaction([
+        prisma.profilDetail.delete({ where: { user_id: id } }),
+        prisma.photoProfile.delete({ where: { user_id: id } }),
+        prisma.groupQuestion.delete({ where: { user_id: id } }),
+        prisma.question.delete({ where: { group_id: findGroupQuestion.id } }),
+        prisma.users.delete({ where: { id } }),
+      ]);
 
       if (!delt) {
         throw {
-          message: "Failed Creating Users!",
+          message: "Failed Deleting User!",
           code: "BAD_REQUEST",
         };
       }

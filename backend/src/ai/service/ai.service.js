@@ -1,6 +1,6 @@
-import { generateText } from "../ai/client/gemini.client.js";
-import { buildQuestionPrompt } from "../ai/prompts/question.prompt.js";
-import { QuestionPayloadSchema } from "../ai/schemas/question_result.schemas.js";
+import { generateText } from "../client/gemini.client.js";
+import { buildQuestionPrompt } from "../prompts/question.prompt.js";
+import { QuestionPayloadSchema } from "../schemas/question_result.schemas.js";
 
 function normalizeText(rawText) {
   const cleaned = rawText

@@ -1,5 +1,5 @@
 import express from "express";
-import usersController from "../controller/users.controller.js";
+import UserController from "./user.controller.js";
 import verifyMiddleware from "../middlewares/auth.middleware.js";
 import roleCheck from "../middlewares/role.middleware.js";
 import ownerShipCheck from "../middlewares/ownershipe_check.middleware.js";
@@ -31,7 +31,7 @@ route.get(
   "/users/getUsers",
   verifyMiddleware,
   roleCheck("ADMIN"),
-  usersController.findall,
+  UserController.findall,
 );
 
 /**
@@ -59,7 +59,7 @@ route.get(
   "/users/getSpecificUser",
   verifyMiddleware,
   roleCheck("ADMIN", "USER"),
-  usersController.findone,
+  UserController.findone,
 );
 
 /**
@@ -100,7 +100,7 @@ route.patch(
   verifyMiddleware,
   roleCheck("ADMIN", "USER"),
   ownerShipCheck,
-  usersController.update,
+  UserController.update,
 );
 
 /**
@@ -127,8 +127,7 @@ route.delete(
   verifyMiddleware,
   roleCheck("ADMIN", "USER"),
   ownerShipCheck,
-  usersController.delete,
+  UserController.delete,
 );
 
 export default route;
-

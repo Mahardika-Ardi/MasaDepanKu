@@ -1,11 +1,11 @@
-import { CreateQuestionDto } from "../dto/question/create_question.js";
-import questionService from "../services/question.service.js";
+import { QuestionCreateDto } from "./dto/question_create.dto.js";
+import QuestionService from "./question.service.js";
 
-class QuestionContoller {
+class QuestionController {
   async create(req, res) {
     try {
-      const validated = CreateQuestionDto.parse(req.body);
-      const result = await questionService.create(validated);
+      const validated = QuestionCreateDto.parse(req.body);
+      const result = await QuestionService.create(validated);
 
       res.status(200).json({
         Success: true,
@@ -24,4 +24,4 @@ class QuestionContoller {
   }
 }
 
-export default new QuestionContoller();
+export default new QuestionController();

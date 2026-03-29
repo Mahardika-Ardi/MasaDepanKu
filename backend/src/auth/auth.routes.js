@@ -1,5 +1,5 @@
 import express from "express";
-import authController from "../controller/auth.controller.js";
+import AuthController from "./auth.controller.js";
 
 const route = express.Router();
 
@@ -26,7 +26,7 @@ const route = express.Router();
  *       201:
  *         description: User created
  */
-route.post("/auth/register", authController.register);
+route.post("/auth/register", AuthController.register);
 
 /**
  * @swagger
@@ -49,6 +49,6 @@ route.post("/auth/register", authController.register);
  *       200:
  *         description: LogIn Successfully
  */
-route.post("/auth/login", authController.login);
+route.post("/auth/login", AuthController.login);
 
 export default route;
