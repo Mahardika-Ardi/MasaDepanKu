@@ -19,7 +19,7 @@ export function CreateApp() {
   app.use(express.json());
   app.use("/api-documentation", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
-  app.get("/", (req, res) => res.send("Hello World!"));
+  app.get("/", (req, res) => res.send("Hello World!!"));
   RoutesLoader(app);
 
   app.use(errorHandler);
