@@ -42,9 +42,21 @@ CREATE TABLE `GroupQuestion` (
 -- CreateTable
 CREATE TABLE `Question` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `number` INTEGER NOT NULL,
     `question` VARCHAR(191) NOT NULL,
     `answer` JSON NOT NULL,
+    `category` ENUM('teknis', 'sosial', 'kreatif', 'analitis', 'manajerial') NOT NULL,
     `group_id` INTEGER NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `UserAnswer` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `user_id` INTEGER NOT NULL,
+    `question_id` INTEGER NOT NULL,
+    `value` INTEGER NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -60,3 +72,9 @@ ALTER TABLE `GroupQuestion` ADD CONSTRAINT `GroupQuestion_user_id_fkey` FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE `Question` ADD CONSTRAINT `Question_group_id_fkey` FOREIGN KEY (`group_id`) REFERENCES `GroupQuestion`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `UserAnswer` ADD CONSTRAINT `UserAnswer_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `Users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `UserAnswer` ADD CONSTRAINT `UserAnswer_question_id_fkey` FOREIGN KEY (`question_id`) REFERENCES `Question`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

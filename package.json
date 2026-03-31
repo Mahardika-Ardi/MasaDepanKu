@@ -1,6 +1,15 @@
 {
+  "name": "masa-depan-ku",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "scripts": {
-    "dev": "concurrently -n BACKEND,FRONTEND -c green,blue \"npm run start:dev --prefix backend\" \"npm run dev --prefix frontend\""
+    "dev": "concurrently -n BACKEND,FRONTEND -c green,blue \"npm run start:dev -w backend\" \"npm run dev -w frontend\"",
+    "lint": "",
+    "start:be": "cd backend && npm run start:dev",
+    "start:fe": "cd frontend && npm run dev"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

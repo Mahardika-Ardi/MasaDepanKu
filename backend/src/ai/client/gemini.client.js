@@ -12,15 +12,10 @@ export async function generateText(prompt, options = {}) {
   if (!prompt) {
     throw new Error({
       message: "Prompt is not set yet",
-      error: error.message,
     });
   }
 
-  const {
-    model = DEFAULT_MODEL,
-    temperature = 0.4,
-    maxOutputTokens = 500,
-  } = options;
+  const { model = DEFAULT_MODEL, temperature, maxOutputTokens } = options;
   const respons = await ai.models.generateContent({
     model,
     contents: prompt,

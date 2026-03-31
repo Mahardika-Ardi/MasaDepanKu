@@ -1,12 +1,11 @@
-import AuthDto from "../dto/auth/auth.dto.js";
-import CreateUsersDto from "../dto/users/create_users.dto.js";
-import authService from "../services/auth.service.js";
+import { AuthDto } from "./dto/auth.dto.js";
+import AuthService from "./auth.service.js";
 
 class AuthController {
   async register(req, res) {
     try {
-      const validated = CreateUsersDto.parse(req.body);
-      const result = await authService.register(validated);
+      const validated = AuthDto.parse(req.body);
+      const result = await AuthService.register(validated);
 
       res.status(201).json({
         Success: true,
@@ -17,8 +16,7 @@ class AuthController {
     } catch (error) {
       res.status(500).json({
         Success: false,
-        Message:
-          `Error -> ${error.message}` || "Error -> Failed to Register Users",
+        Message: "Error -> Failed to Register Users",
         Information: null,
         Error: error.code || "BAD_REQUEST",
       });
@@ -28,7 +26,7 @@ class AuthController {
   async login(req, res) {
     try {
       const validated = AuthDto.parse(req.body);
-      const result = await authService.login(validated);
+      const result = await AuthService.login(validated);
 
       res.status(200).json({
         Success: true,
@@ -39,7 +37,7 @@ class AuthController {
     } catch (error) {
       res.status(500).json({
         Success: false,
-        Message: `Error -> ${error.message}` || "Error -> LogIn Failed!",
+        Message: "Error -> LogIn Failed!",
         Information: null,
         Error: error.code || "BAD_REQUEST",
       });

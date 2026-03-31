@@ -30,14 +30,6 @@ class UserService {
         };
       });
 
-      console.log({
-        data: userSafe,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      });
-
       return {
         data: userSafe,
         total,
@@ -57,7 +49,7 @@ class UserService {
 
       if (!find) {
         throw {
-          message: "Failed Getting All User!",
+          message: "Failed Getting User!",
           code: "BAD_REQUEST",
         };
       }
@@ -70,6 +62,8 @@ class UserService {
       };
     } catch (error) {
       const prismaError = prismaErrors(error);
+      console.log(error);
+
       throw error || prismaError;
     }
   }
@@ -79,7 +73,7 @@ class UserService {
 
       if (!updt) {
         throw new Error({
-          message: "Failed Creating Users!",
+          message: "Failed Updating Users Data!",
           code: "BAD_REQUEST",
         });
       }
@@ -107,11 +101,28 @@ class UserService {
   }
   async delete(id) {
     try {
-      const delt = await prisma.users.delete({ where: { id } });
+      const findGroupQuestion = await prisma.groupQuestion.findFirst({
+        where: { user_id: id },
+      });
+
+      if (!findGroupQuestion) {
+        throw {
+          message: "Failed Finding User!",
+          code: "BAD_REQUEST",
+        };
+      }
+
+      const delt = await prisma.$transaction([
+        prisma.profilDetail.delete({ where: { user_id: id } }),
+        prisma.photoProfile.delete({ where: { user_id: id } }),
+        prisma.groupQuestion.delete({ where: { user_id: id } }),
+        prisma.question.delete({ where: { group_id: findGroupQuestion.id } }),
+        prisma.users.delete({ where: { id } }),
+      ]);
 
       if (!delt) {
         throw {
-          message: "Failed Creating Users!",
+          message: "Failed Deleting User!",
           code: "BAD_REQUEST",
         };
       }

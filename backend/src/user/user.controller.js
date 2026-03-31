@@ -1,5 +1,5 @@
-import UpdateUsersDto from "../dto/users/update_users.dto.js";
-import UserService from "../services/users.service.js";
+import { UserUpdateDto } from "./dto/user_update.dto.js";
+import UserService from "./user.service.js";
 
 class UserController {
   async findall(req, res) {
@@ -15,12 +15,10 @@ class UserController {
         Information: result,
         Error: null,
       });
-      console.log(result);
     } catch (error) {
       res.status(500).json({
         Success: false,
-        Message:
-          `Error -> ${error.message}` || "Error -> Failed to Get User Data!",
+        Message: "Error -> Failed to Get User Data!",
         Information: null,
         Error: error.code || "BAD_REQUEST",
       });
@@ -47,8 +45,7 @@ class UserController {
     } catch (error) {
       res.status(500).json({
         Success: false,
-        Message:
-          `Error -> ${error.message}` || "Error -> Failed to Get User Data!",
+        Message: "Error -> Failed to Get User Data!",
         Information: null,
         Error: error.code || "BAD_REQUEST",
       });
@@ -57,7 +54,7 @@ class UserController {
   async update(req, res) {
     const id = Number(req.params.id);
     try {
-      const validated = UpdateUsersDto.parse(req.body);
+      const validated = UserUpdateDto.parse(req.body);
       const result = await UserService.update(id, validated);
 
       res.status(201).json({
@@ -69,8 +66,7 @@ class UserController {
     } catch (error) {
       res.status(500).json({
         Success: false,
-        Message:
-          `Error -> ${error.message}` || "Error -> Failed to Get User Data!",
+        Message: "Error -> Failed to Get User Data!",
         Information: null,
         Error: error.code || "BAD_REQUEST",
       });
@@ -90,8 +86,7 @@ class UserController {
     } catch (error) {
       res.status(500).json({
         Success: false,
-        Message:
-          `Error -> ${error.message}` || "Error -> Failed to Register Users",
+        Message: "Error -> Failed to Register Users",
         Information: null,
         Error: error.code || "BAD_REQUEST",
       });
