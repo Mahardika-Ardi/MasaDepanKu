@@ -1,4 +1,4 @@
-import { multerConfig, multersConfig } from "../config/multer.config";
+import { multerConfig, multersConfig } from "../config/multer.config.js";
 
-export const uploadSingleImage = multerConfig.single("image");
-export const uploadMultipleFiles = multersConfig.array("images", 5);
+export const uploadSingleImage = multerConfig.single("file");
+export const uploadMultipleFiles = multersConfig.array("file", 5);

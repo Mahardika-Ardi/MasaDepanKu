@@ -39,7 +39,7 @@ class ProfileService {
         });
         await tx.profilDetail.update({
           where: { user_id: Number(id) },
-          data: { jurusan: data.jurusan, raport_score: data.score },
+          data: { jurusan: data.jurusan, raport_score: data.raport },
         });
 
         const [findPhoto, findProfileDetail] = await Promise.all([

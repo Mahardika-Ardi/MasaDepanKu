@@ -1,10 +1,11 @@
 import { AuthDto } from "./dto/auth.dto.js";
 import AuthService from "./auth.service.js";
+import { UserCreateDto } from "../user/dto/user_create.dto.js";
 
 class AuthController {
   async register(req, res) {
     try {
-      const validated = AuthDto.parse(req.body);
+      const validated = UserCreateDto.parse(req.body);
       const result = await AuthService.register(validated);
 
       res.status(201).json({
