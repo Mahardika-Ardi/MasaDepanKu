@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function LoginPage() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [status, setStatus] = useState({
     loading: false,
@@ -33,7 +34,6 @@ function LoginPage() {
       );
 
       const data = await response.json();
-      localStorage.setItem("token", data.token);
 
       if (!response.ok || !data.Success) {
         throw new Error(data.Message || "Login gagal");
@@ -45,6 +45,7 @@ function LoginPage() {
       }
 
       setStatus({ loading: false, message: "Login berhasil.", error: false });
+      navigate("/beranda", { replace: true });
     } catch (error) {
       setStatus({ loading: false, message: error.message, error: true });
     }
