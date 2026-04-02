@@ -14,10 +14,10 @@ model Users {
   password String
   role     Role   @default(USER)
 
-  photoProfiles  PhotoProfile?
-  profilDetail   ProfilDetail?
-  groupQuestions GroupQuestion[]
-  userAnswers    UserAnswer[]
+  photoProfiles    PhotoProfile?
+  profilDetail     ProfilDetail?
+  groupQuestions   GroupQuestion[]
+  userAnswerGroups UserAnswerGroup[]
 }
 
 model PhotoProfile {
@@ -54,17 +54,22 @@ model Question {
   group_id Int
 
   group_question GroupQuestion @relation(fields: [group_id], references: [id])
-  userAnswers    UserAnswer[]
+}
+
+model UserAnswerGroup {
+  id      Int @id @default(autoincrement())
+  user_id Int
+
+  user        Users        @relation(fields: [user_id], references: [id])
+  userAnswers UserAnswer[]
 }
 
 model UserAnswer {
-  id          Int @id @default(autoincrement())
-  user_id     Int
-  question_id Int
-  value       Int
+  id       Int @id @default(autoincrement())
+  group_id Int
+  value    Int
 
-  user     Users    @relation(fields: [user_id], references: [id])
-  question Question @relation(fields: [question_id], references: [id])
+  useranswergroup UserAnswerGroup @relation(fields: [group_id], references: [id])
 }
 
 enum Role {

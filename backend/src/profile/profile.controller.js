@@ -23,13 +23,23 @@ class ProfileController {
     }
   }
   async update(req, res) {
+    const data = {
+      file: req.file.filename,
+      jurusan: req.body.jurusan,
+      raport: req.body.raport ? JSON.parse(req.body.raport) : null,
+    };
+
     try {
-      const data = {
-        file: req.file.filename,
-        jurusan: req.body.jurusan,
-        raport: req.body.raport ? JSON.parse(req.body.raport) : null,
-      };
       const validated = ProfileUpdateDto.parse(data);
+
+      if (!validated) {
+        res.status(500).json({
+          Message:
+            "Error -> Data type is not valid or data blak ( undifined / null )",
+          Information: null,
+        });
+      }
+
       const result = await ProfileService.update(req.user.id, validated);
 
       res.status(200).json({

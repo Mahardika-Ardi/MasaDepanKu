@@ -5,7 +5,7 @@ class UserService {
   async findall(page, limit) {
     const skip = (page - 1) * limit;
     try {
-      const [users, total] = await Promise.all([
+      const [users, total] = await prisma.$transaction([
         prisma.users.findMany({
           take: limit,
           skip: skip,
@@ -69,7 +69,10 @@ class UserService {
   }
   async update(id, data) {
     try {
-      const updt = await prisma.users.update({ where: { id }, data });
+      const updt = await prisma.$transaction([
+        prisma.users.update({ where: { id }, data }),
+        prisma.users.findFirst({ where: { id } }),
+      ]);
 
       if (!updt) {
         throw new Error({
@@ -78,20 +81,11 @@ class UserService {
         });
       }
 
-      const find = await prisma.users.findFirst({ where: { id } });
-
-      if (!find) {
-        throw {
-          message: "Failed Creating Users!",
-          code: "BAD_REQUEST",
-        };
-      }
-
       return {
-        id: find.id,
-        name: find.name,
-        email: find.email,
-        role: find.role,
+        id: updt.id,
+        name: updt.name,
+        email: updt.email,
+        role: updt.role,
       };
     } catch (error) {
       const prismaError = prismaErrors(error);

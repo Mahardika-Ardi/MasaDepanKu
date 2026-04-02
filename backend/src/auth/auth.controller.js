@@ -6,6 +6,15 @@ class AuthController {
   async register(req, res) {
     try {
       const validated = UserCreateDto.parse(req.body);
+
+      if (!validated) {
+        res.status(500).json({
+          Message:
+            "Error -> Data type is not valid or data blak ( undifined / null )",
+          Information: null,
+        });
+      }
+
       const result = await AuthService.register(validated);
 
       res.status(201).json({
@@ -27,6 +36,15 @@ class AuthController {
   async login(req, res) {
     try {
       const validated = AuthDto.parse(req.body);
+
+      if (!validated) {
+        res.status(500).json({
+          Message:
+            "Error -> Data type is not valid or data blak ( undifined / null )",
+          Information: null,
+        });
+      }
+
       const result = await AuthService.login(validated);
 
       res.status(200).json({

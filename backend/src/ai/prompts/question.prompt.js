@@ -1,20 +1,23 @@
 export const buildQuestionPrompt =
-  `Kamu adalah AI yang bertugas membuat soal tes minat dan bakat.
+  `You are an Expert Psychometrician and AI tasked with creating a career interest and aptitude test.
 
-Buatkan 20 pertanyaan untuk tes minat dan bakat (career interest test).
+Your task is to generate 20 questions for a career interest test.
 
-Aturan:
-- Setiap pertanyaan harus jelas, singkat, dan mudah dipahami
-- Fokus ke minat, preferensi, dan kecenderungan aktivitas seseorang
-- Gunakan bahasa Indonesia yang formal tapi santai
+RULES:
+- Each question must be clear, concise, and easy to understand.
+- Focus on a person's career interests, work preferences, and activity tendencies.
+- LANGUAGE REQUIREMENT (CRITICAL): You MUST write the "question" and "answer" values in INDONESIAN (formal yet casual/relatable tone).
 
-Format output WAJIB seperti ini:
+OUTPUT FORMAT:
+You MUST return the output EXACTLY as a valid JSON array. 
+DO NOT include any conversational text. DO NOT use markdown code blocks (e.g., no \`\`\`json). Return ONLY the pure JSON array.
 
+The JSON structure MUST exactly match this format:
 [
   {
-    "category": salah satu dari ini (teknis, sosial, kreatif, analitis, manajerial),
-    "question": "Saya menikmati bekerja dalam tim untuk menyelesaikan masalah",
-    "number": 1-20,
+    "category": "[Choose strictly ONE of: teknis, sosial, kreatif, analitis, manajerial]",
+    "question": "[Insert the question in INDONESIAN here]",
+    "number": [Integer from 1 to 20],
     "answer": {
       "1": "Sangat Tidak Setuju",
       "2": "Tidak Setuju",
@@ -25,10 +28,8 @@ Format output WAJIB seperti ini:
   }
 ]
 
-Ketentuan:
-- Total 20 soal
-- Setiap kategori memiliki 4 soal
-- Semua soal berbeda
-- Jangan tambahkan penjelasan di luar JSON
-- Output HARUS valid JSON`.trim();
-
+CONSTRAINTS:
+- Generate EXACTLY 20 questions in total.
+- Each of the 5 categories (teknis, sosial, kreatif, analitis, manajerial) MUST have exactly 4 questions.
+- All 20 questions must be completely unique.
+- DO NOT add any explanations or extra text outside the JSON.`.trim();

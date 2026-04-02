@@ -1,51 +1,15 @@
+import AiService from "../ai/service/ai.service.js";
 import prisma from "../config/prisma.config.js";
 import prismaErrors from "../utils/prisma_errors.utils.js";
 
 class AnalysisService {
-  async create(data) {
+  async analysis(id, data) {
     try {
-      await prisma.users.create();
-      //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
-  }
-  async findall() {
-    try {
-      // await prisma.users.findMany();
-      //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
-  }
-  async findone(id) {
-    try {
-      // await prisma.users.findFirst();
-      //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
-  }
-  async update(id, data) {
-    try {
-      // await prisma.users.update();
-      //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
-  }
-  async delete(id) {
-    try {
-      // await prisma.users.delete();
-      //logic
+      const Analysis = await prisma.$transaction([
+        prisma.profilDetail.findFirst({ where: { user_id: id } }),
+        // prisma.
+      ]);
+      const AiResponse = await AiService.AnalysisData();
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
