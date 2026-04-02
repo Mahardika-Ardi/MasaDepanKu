@@ -26,7 +26,7 @@ const route = express.Router();
  *       201:
  *         description: User created
  */
-route.post("/auth/register", AuthController.register);
+route.post("/register", AuthController.register);
 
 /**
  * @swagger

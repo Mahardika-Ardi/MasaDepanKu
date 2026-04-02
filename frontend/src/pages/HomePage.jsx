@@ -1,19 +1,41 @@
+import { useNavigate } from "react-router-dom";
 import profilePhoto from "../assets/beranda/photo_profile.png";
-import posterImage from "../assets/beranda/image 6.png";
-import careerImage from "../assets/beranda/Rectangle 14.png";
+import posterImage from "../assets/beranda/rekomendasi_kampus.png";
+import careerImage from "../assets/beranda/ilustrasi_minat_bakat.png";
 
 const topNav = ["Halaman Utama", "Jaringan Saya", "Pekerjaan", "Pesan"];
 const leftShortcuts = ["Item yang disimpan", "Grup", "Buletin", "Acara"];
 const postActions = ["Media", "Acara", "Tulis Artikel"];
 const postFooter = ["Suka", "Komentar", "Bagikan", "Kirim"];
 const rightNews = [
-  "LaGuardia Airport reopens after fatal ...",
-  "LaGuardia Airport reopens after fatal ...",
-  "LaGuardia Airport reopens after fatal ...",
-  "LaGuardia Airport reopens after fatal ...",
+  {
+    title: "Anak SMK di Malang Lolos SNBP di Kampus Negeri Favorit",
+    snippet: "Perjuangan tiga tahun terbayar lunas setelah berhasil menembus seleksi tanpa tes.",
+    time: "12 menit yang lalu",
+    views: "18.204 pembaca",
+  },
+  {
+    title: "Siswa SMK Temukan Prototipe Sensor Hemat Energi Saat Praktik",
+    snippet: "Temuan sederhana dari bengkel sekolah ini langsung menarik perhatian guru pembimbing.",
+    time: "45 menit yang lalu",
+    views: "7.981 pembaca",
+  },
+  {
+    title: "Tim SMK Raih Juara Lomba Inovasi Berkat Aplikasi Bikinan Sendiri",
+    snippet: "Aplikasi untuk membantu manajemen kelas dinilai paling praktis dan tepat guna.",
+    time: "3 jam yang lalu",
+    views: "42.670 pembaca",
+  },
+  {
+    title: "Siswa Jurusan TKJ Ciptakan Solusi Wi-Fi Murah untuk Desa",
+    snippet: "Proyek tugas akhir ini kini diuji coba di lingkungan sekitar sekolah.",
+    time: "1 hari yang lalu",
+    views: "254.457 pembaca",
+  },
 ];
 
 function HomePage() {
+  const navigate = useNavigate();
   const handlePlaceholder = () => {};
 
   return (
@@ -45,7 +67,14 @@ function HomePage() {
 
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.9fr_1fr]">
           <aside className="space-y-4">
-            <article className="overflow-hidden rounded-[18px] border border-white/5 bg-[#1d2027] shadow-[0_16px_32px_rgba(0,0,0,0.35)]">
+            <article
+              className="overflow-hidden rounded-[18px] border border-white/5 bg-[#1d2027] shadow-[0_16px_32px_rgba(0,0,0,0.35)] cursor-pointer transition hover:border-white/10 hover:shadow-[0_20px_40px_rgba(0,0,0,0.5)]"
+              onClick={() => navigate("/profile")}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === "Enter" && navigate("/profile")}
+              aria-label="Lihat halaman profil"
+            >
               <div className="h-[90px] bg-gradient-to-r from-[#0f1118] via-[#2c2f3a] to-[#11131b]" />
               <div className="relative px-4 pb-4">
                 <img
@@ -175,18 +204,21 @@ function HomePage() {
 
           <aside className="space-y-4">
             <article className="rounded-[18px] border border-white/5 bg-[#1d2027] p-4 shadow-[0_16px_32px_rgba(0,0,0,0.35)]">
-              <h3 className="text-[30px] font-semibold leading-none text-[#d9deea]">Berita LinkedIn</h3>
+              <h3 className="text-[30px] font-semibold leading-none text-[#d9deea]">Berita</h3>
               <p className="mt-1 text-[12px] text-[#8d94a4]">Berita Utama</p>
               <div className="mt-4 space-y-3">
                 {rightNews.map((news, index) => (
                   <button
-                    key={`${news}-${index}`}
+                    key={`${news.title}-${index}`}
                     type="button"
                     onClick={handlePlaceholder}
                     className="block w-full text-left text-[12px] text-[#c2c9d7] hover:text-white"
                   >
-                    <p>{news}</p>
-                    <p className="mt-1 text-[10px] text-[#7f8798]">26 menit yang lalu • 54.417 pembaca</p>
+                    <p className="leading-relaxed">{news.title}</p>
+                    <p className="mt-1 text-[10px] text-[#8a909e]">{news.snippet}</p>
+                    <p className="mt-1 text-[10px] text-[#7f8798]">
+                      {news.time} • {news.views}
+                    </p>
                   </button>
                 ))}
               </div>
