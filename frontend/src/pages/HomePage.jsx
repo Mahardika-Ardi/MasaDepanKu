@@ -226,7 +226,7 @@ function HomePage() {
 
             <article className="overflow-hidden rounded-[18px] border border-white/5 bg-[#1d2027] shadow-[0_16px_32px_rgba(0,0,0,0.35)]">
               <div className="p-4">
-                <p className="text-[16px] font-semibold text-[#dce2ef]">Jalur karirmu, didukung oleh minat bakatmu</p>
+                <p className="text-[16px] font-semibold text-[#dce2ef]">Temukan jalur karirmu, sekarang!</p>
                 <button
                   type="button"
                   onClick={handlePlaceholder}

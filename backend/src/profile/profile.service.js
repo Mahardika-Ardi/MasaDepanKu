@@ -51,50 +51,79 @@ class ProfileService {
 
   async update(id, data) {
     try {
-      const fullName = [data.first_name, data.last_name].filter(Boolean).join(" ").trim();
+      const currentId = Number(id);
+
+      const [findUser, findPhoto, findProfileDetail] = await prisma.$transaction([
+        prisma.users.findUnique({ where: { id: currentId } }),
+        prisma.photoProfile.findFirst({ where: { user_id: currentId } }),
+        prisma.profilDetail.findFirst({ where: { user_id: currentId } }),
+      ]);
+
+      const currentScores = normalizeScores(findProfileDetail?.raport_score);
+      const mergedScores = {
+        ...currentScores,
+        ...Object.fromEntries(
+          Object.entries(data.scores ?? {}).filter(([, value]) => value !== undefined && value !== null && value !== ""),
+        ),
+      };
+
+      const profileUpdateData = {
+        ...(data.first_name !== undefined ? { first_name: data.first_name } : {}),
+        ...(data.last_name !== undefined ? { last_name: data.last_name } : {}),
+        ...(data.motto !== undefined ? { motto: data.motto } : {}),
+        ...(data.country !== undefined ? { country: data.country } : {}),
+        ...(data.city !== undefined ? { city: data.city } : {}),
+      };
+
+      if (Object.keys(data.scores ?? {}).length > 0) {
+        profileUpdateData.raport_score = mergedScores;
+      }
+
+      const fullName = [
+        data.first_name !== undefined ? data.first_name : findProfileDetail?.first_name,
+        data.last_name !== undefined ? data.last_name : findProfileDetail?.last_name,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
 
       const updt = await prisma.$transaction(async (tx) => {
-        if (fullName) {
+        if (fullName && fullName !== findUser?.name) {
           await tx.users.update({
-            where: { id: Number(id) },
+            where: { id: currentId },
             data: { name: fullName },
           });
         }
 
-        await tx.profilDetail.update({
-          where: { user_id: Number(id) },
-          data: {
-            first_name: data.first_name,
-            last_name: data.last_name,
-            motto: data.motto,
-            country: data.country,
-            city: data.city,
-            raport_score: data.scores,
-          },
-        });
+        if (Object.keys(profileUpdateData).length > 0) {
+          await tx.profilDetail.update({
+            where: { user_id: currentId },
+            data: profileUpdateData,
+          });
+        }
 
-        const [findUser, findPhoto, findProfileDetail] = await Promise.all([
-          tx.users.findUnique({ where: { id: Number(id) } }),
-          tx.photoProfile.findFirst({ where: { user_id: Number(id) } }),
-          tx.profilDetail.findFirst({ where: { user_id: Number(id) } }),
+        const [updatedUser, updatedPhoto, updatedProfileDetail] = await Promise.all([
+          tx.users.findUnique({ where: { id: currentId } }),
+          tx.photoProfile.findFirst({ where: { user_id: currentId } }),
+          tx.profilDetail.findFirst({ where: { user_id: currentId } }),
         ]);
 
         return {
           user: {
-            id: findUser.id,
-            name: findUser.name,
-            email: findUser.email,
-            role: findUser.role,
+            id: updatedUser.id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            role: updatedUser.role,
           },
-          photo_path: findPhoto?.file ?? null,
+          photo_path: updatedPhoto?.file ?? null,
           profil_detail: {
-            first_name: findProfileDetail.first_name ?? "",
-            last_name: findProfileDetail.last_name ?? "",
-            motto: findProfileDetail.motto ?? "",
-            country: findProfileDetail.country ?? "",
-            city: findProfileDetail.city ?? "",
-            jurusan: findProfileDetail.jurusan ?? "",
-            scores: normalizeScores(findProfileDetail.raport_score),
+            first_name: updatedProfileDetail.first_name ?? "",
+            last_name: updatedProfileDetail.last_name ?? "",
+            motto: updatedProfileDetail.motto ?? "",
+            country: updatedProfileDetail.country ?? "",
+            city: updatedProfileDetail.city ?? "",
+            jurusan: updatedProfileDetail.jurusan ?? "",
+            scores: normalizeScores(updatedProfileDetail.raport_score),
           },
         };
       });

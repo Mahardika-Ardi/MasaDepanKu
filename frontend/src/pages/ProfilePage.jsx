@@ -74,6 +74,32 @@ function normalizeScores(scores) {
   }, {});
 }
 
+function buildUpdatePayload(formData) {
+  const payload = {};
+
+  for (const key of ["first_name", "last_name", "motto", "country", "city"]) {
+    const value = formData[key]?.trim();
+    if (value) {
+      payload[key] = value;
+    }
+  }
+
+  const scores = {};
+
+  for (const field of scoreFields) {
+    const value = formData.scores?.[field.key];
+    if (value !== "" && value !== null && value !== undefined) {
+      scores[field.key] = Number(value);
+    }
+  }
+
+  if (Object.keys(scores).length > 0) {
+    payload.scores = scores;
+  }
+
+  return payload;
+}
+
 function buildProfileState(payload) {
   const profile = payload ?? {};
   const detail = profile.profil_detail ?? {};
@@ -235,13 +261,15 @@ function ProfilePage() {
     setNotice({ text: "", error: false });
 
     try {
+      const payload = buildUpdatePayload(form);
+
       const response = await fetch(`${API_BASE_URL}/profile/updateProfile`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       const raw = await response.text();

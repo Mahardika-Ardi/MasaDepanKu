@@ -1,11 +1,16 @@
 import { z } from "zod";
 
+const optionalText = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  z.string().min(1).optional(),
+);
+
 export const ProfileUpdateDto = z.object({
-  first_name: z.string().min(1).optional(),
-  last_name: z.string().min(1).optional(),
-  motto: z.string().min(1).optional(),
-  country: z.string().min(1).optional(),
-  city: z.string().min(1).optional(),
+  first_name: optionalText,
+  last_name: optionalText,
+  motto: optionalText,
+  country: optionalText,
+  city: optionalText,
   scores: z
     .object({
       bahasa_indonesia: z.union([z.string(), z.number()]).optional(),
