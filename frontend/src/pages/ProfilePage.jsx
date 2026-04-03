@@ -319,7 +319,7 @@ function ProfilePage() {
               🔍
             </button>
             <button type="button" className="text-[13px] hover:text-white">
-              ⬤
+              👤
             </button>
           </nav>
         </header>

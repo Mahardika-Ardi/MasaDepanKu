@@ -59,8 +59,8 @@ function HomePage() {
             <button type="button" onClick={handlePlaceholder} className="text-[13px] hover:text-white">
               🔍
             </button>
-            <button type="button" onClick={handlePlaceholder} className="text-[13px] hover:text-white">
-              ⬤
+            <button type="button" onClick={() => navigate("/profile")} className="text-[13px] hover:text-white">
+              👤
             </button>
           </nav>
         </header>
