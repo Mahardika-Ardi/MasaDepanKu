@@ -1,245 +1,134 @@
-import { useNavigate } from "react-router-dom";
-import profilePhoto from "../assets/beranda/photo_profile.png";
-import posterImage from "../assets/beranda/rekomendasi_kampus.png";
-import careerImage from "../assets/beranda/ilustrasi_minat_bakat.png";
-
-const topNav = ["Halaman Utama", "Jaringan Saya", "Pekerjaan", "Pesan"];
-const leftShortcuts = ["Item yang disimpan", "Grup", "Buletin", "Acara"];
-const postActions = ["Media", "Acara", "Tulis Artikel"];
-const postFooter = ["Suka", "Komentar", "Bagikan", "Kirim"];
-const rightNews = [
-  {
-    title: "Anak SMK di Malang Lolos SNBP di Kampus Negeri Favorit",
-    snippet: "Perjuangan tiga tahun terbayar lunas setelah berhasil menembus seleksi tanpa tes.",
-    time: "12 menit yang lalu",
-    views: "18.204 pembaca",
-  },
-  {
-    title: "Siswa SMK Temukan Prototipe Sensor Hemat Energi Saat Praktik",
-    snippet: "Temuan sederhana dari bengkel sekolah ini langsung menarik perhatian guru pembimbing.",
-    time: "45 menit yang lalu",
-    views: "7.981 pembaca",
-  },
-  {
-    title: "Tim SMK Raih Juara Lomba Inovasi Berkat Aplikasi Bikinan Sendiri",
-    snippet: "Aplikasi untuk membantu manajemen kelas dinilai paling praktis dan tepat guna.",
-    time: "3 jam yang lalu",
-    views: "42.670 pembaca",
-  },
-  {
-    title: "Siswa Jurusan TKJ Ciptakan Solusi Wi-Fi Murah untuk Desa",
-    snippet: "Proyek tugas akhir ini kini diuji coba di lingkungan sekitar sekolah.",
-    time: "1 hari yang lalu",
-    views: "254.457 pembaca",
-  },
-];
+import { Link, useNavigate } from "react-router-dom";
+import profilePreview from "../assets/beranda/photo_profile.png";
+import aptitudePreview from "../assets/beranda/ilustrasi_minat_bakat.png";
+import jobPreview from "../assets/beranda/rekomendasi_kampus.png";
 
 function HomePage() {
   const navigate = useNavigate();
-  const handlePlaceholder = () => {};
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login", { replace: true });
+  };
 
   return (
-    <main className="min-h-screen bg-[#191b22] text-[#d7dae2]">
-      <div className="mx-auto max-w-[1280px] px-4 pb-10 pt-3 lg:px-6">
-        <header className="mb-4 h-10 rounded-[2px] bg-[#23262d] px-5 shadow-[0_8px_24px_rgba(0,0,0,0.28)]">
-          <nav className="flex h-full items-center justify-center gap-8 text-[12px] text-[#b7becb]">
-            {topNav.map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={handlePlaceholder}
-                className="transition hover:text-white"
-              >
-                {item}
-              </button>
-            ))}
-            <button type="button" onClick={handlePlaceholder} className="text-[13px] hover:text-white">
-              🔔
-            </button>
-            <button type="button" onClick={handlePlaceholder} className="text-[13px] hover:text-white">
-              🔍
-            </button>
-            <button type="button" onClick={() => navigate("/profile")} className="text-[13px] hover:text-white">
-              👤
-            </button>
+    <main className="min-h-screen bg-[#191b22] text-[#f2f2f2]">
+      <header className="border-b border-white/5 bg-[#1f2128]/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 lg:px-8">
+          <div>
+            <p className="text-sm uppercase tracking-[0.3em] text-sky-400/80">
+              MasaDepanKu
+            </p>
+            <h1 className="text-lg font-semibold text-white">Dashboard Karier</h1>
+          </div>
+
+          <nav className="hidden items-center gap-5 text-sm text-[#d4d7dd] md:flex">
+            <a href="#fitur" className="transition hover:text-white">
+              Fitur
+            </a>
+            <a href="#alur" className="transition hover:text-white">
+              Alur Tes
+            </a>
+            <Link to="/profile" className="transition hover:text-white">
+              Profil
+            </Link>
           </nav>
-        </header>
 
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.9fr_1fr]">
-          <aside className="space-y-4">
-            <article
-              className="overflow-hidden rounded-[18px] border border-white/5 bg-[#1d2027] shadow-[0_16px_32px_rgba(0,0,0,0.35)] cursor-pointer transition hover:border-white/10 hover:shadow-[0_20px_40px_rgba(0,0,0,0.5)]"
-              onClick={() => navigate("/profile")}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => e.key === "Enter" && navigate("/profile")}
-              aria-label="Lihat halaman profil"
-            >
-              <div className="h-[90px] bg-gradient-to-r from-[#0f1118] via-[#2c2f3a] to-[#11131b]" />
-              <div className="relative px-4 pb-4">
-                <img
-                  src={profilePhoto}
-                  alt="Foto profil"
-                  className="absolute -top-10 h-20 w-20 rounded-full border-[3px] border-[#1d2027] object-cover"
-                />
-                <div className="pt-12">
-                  <h2 className="text-[20px] font-semibold leading-tight text-white">
-                    Salman Falah Taqiyu...
-                  </h2>
-                  <p className="mt-1 text-[13px] text-[#aeb4c2]">
-                    Aspiring Mobile App Developer | Transforming Ideas into Reality wit...
-                  </p>
-                  <p className="mt-1 text-[11px] text-[#8b92a1]">Kota Malang, Jawa Timur</p>
-                  <button
-                    type="button"
-                    onClick={handlePlaceholder}
-                    className="mt-3 h-9 w-full rounded-[10px] border border-[#4b5160] text-left text-[13px] text-[#cfd4df] transition hover:border-[#6d7588] hover:text-white"
-                  >
-                    <span className="pl-3">Pengalaman</span>
-                  </button>
-                </div>
-              </div>
-            </article>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-[#f5f5f5] transition hover:border-white/25 hover:bg-white/5"
+          >
+            Logout
+          </button>
+        </div>
+      </header>
 
-            <article className="rounded-[18px] border border-white/5 bg-[#1d2027] p-4 shadow-[0_16px_32px_rgba(0,0,0,0.35)]">
-              <button
-                type="button"
-                onClick={handlePlaceholder}
-                className="mb-2 flex w-full items-center justify-between text-[12px] text-[#c9ced9] hover:text-white"
+      <section className="mx-auto max-w-7xl px-4 py-10 lg:px-8 lg:py-14">
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-[28px] border border-white/8 bg-[#15171d] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+            <p className="mb-4 inline-flex rounded-full border border-sky-500/25 bg-sky-500/10 px-4 py-2 text-sm text-sky-300">
+              Jelajah karir, mulai dari tes minat bakat
+            </p>
+            <h2 className="max-w-2xl text-4xl font-semibold leading-tight tracking-[-0.03em] text-white lg:text-6xl">
+              Temukan arah karier yang paling cocok untukmu.
+            </h2>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-[#b2b6bf] lg:text-lg">
+              Coba tes minat bakat, lihat hasil analisis, lalu lanjutkan ke
+              rekomendasi karier yang sesuai dengan profilmu.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                to="/jelajah-karir"
+                className="inline-flex items-center justify-center rounded-full bg-[#0c66c2] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0a5ab0]"
               >
-                <span>Pengunjung profil</span>
-                <span className="text-[#2f8fff]">4</span>
-              </button>
-              <button
-                type="button"
-                onClick={handlePlaceholder}
-                className="flex w-full items-center justify-between text-[12px] text-[#c9ced9] hover:text-white"
+                Mulai Tes Minat Bakat
+              </Link>
+              <Link
+                to="/profile"
+                className="inline-flex items-center justify-center rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/5"
               >
-                <span>Tayangan posting</span>
-                <span className="text-[#2f8fff]">5</span>
-              </button>
-            </article>
+                Lihat Hasil Terakhir
+              </Link>
+            </div>
+          </div>
 
-            <article className="rounded-[18px] border border-white/5 bg-[#1d2027] p-4 shadow-[0_16px_32px_rgba(0,0,0,0.35)]">
-              <ul className="space-y-2 text-[12px] text-[#c5cad6]">
-                {leftShortcuts.map((item) => (
-                  <li key={item}>
-                    <button
-                      type="button"
-                      onClick={handlePlaceholder}
-                      className="flex w-full items-center gap-2 hover:text-white"
-                    >
-                      <span className="opacity-75">■</span>
-                      <span>{item}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          </aside>
-
-          <section className="space-y-4">
-            <article className="rounded-[18px] border border-white/5 bg-[#1d2027] p-4 shadow-[0_16px_32px_rgba(0,0,0,0.35)]">
-              <div className="mb-3 flex items-center gap-3">
-                <img src={profilePhoto} alt="Foto profil kecil" className="h-10 w-10 rounded-full object-cover" />
-                <button
-                  type="button"
-                  onClick={handlePlaceholder}
-                  className="h-10 flex-1 rounded-full border border-[#4d5361] px-4 text-left text-[13px] text-[#9ca4b4] hover:border-[#697187] hover:text-[#cfd5e2]"
-                >
-                  Mulai buat posting
-                </button>
+          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-1">
+            <div className="overflow-hidden rounded-[24px] border border-white/8 bg-[#15171d] shadow-[0_18px_40px_rgba(0,0,0,0.3)]">
+              <img src={aptitudePreview} alt="Tes minat bakat" className="h-52 w-full object-cover" />
+              <div className="p-5">
+                <p className="text-lg font-semibold text-white">Tes Minat Bakat</p>
+                <p className="mt-2 text-sm text-[#aeb4be]">
+                  20 soal, 4 soal per halaman, hasil langsung dikirim ke backend.
+                </p>
               </div>
-              <div className="grid grid-cols-3 gap-2 text-[16px] text-[#c9ceda]">
-                {postActions.map((action) => (
-                  <button
-                    key={action}
-                    type="button"
-                    onClick={handlePlaceholder}
-                    className="rounded-[10px] py-2 transition hover:bg-[#252a35]"
-                  >
-                    {action}
-                  </button>
-                ))}
+            </div>
+            <div className="overflow-hidden rounded-[24px] border border-white/8 bg-[#15171d] shadow-[0_18px_40px_rgba(0,0,0,0.3)]">
+              <img src={jobPreview} alt="Rekomendasi karier" className="h-52 w-full object-cover" />
+              <div className="p-5">
+                <p className="text-lg font-semibold text-white">Rekomendasi Karier</p>
+                <p className="mt-2 text-sm text-[#aeb4be]">
+                  Analisis akan menampilkan ringkasan, job rekomendasi, dan advice.
+                </p>
               </div>
-            </article>
-
-            <article className="overflow-hidden rounded-[18px] border border-white/5 bg-[#1d2027] shadow-[0_16px_32px_rgba(0,0,0,0.35)]">
-              <div className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-[10px] font-bold text-[#2a2d35]">
-                    Tencent
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-semibold text-[#dce2ee]">Tencent</p>
-                    <p className="text-[11px] text-[#8d94a4]">17.43 • sponsored</p>
-                  </div>
-                </div>
-                <button type="button" onClick={handlePlaceholder} className="text-[14px] text-[#1f8bff] hover:text-[#64aeff]">
-                  + Ikuti
-                </button>
+            </div>
+            <div className="overflow-hidden rounded-[24px] border border-white/8 bg-[#15171d] shadow-[0_18px_40px_rgba(0,0,0,0.3)]">
+              <img src={profilePreview} alt="Profil pengguna" className="h-52 w-full object-cover" />
+              <div className="p-5">
+                <p className="text-lg font-semibold text-white">Profil Pengguna</p>
+                <p className="mt-2 text-sm text-[#aeb4be]">
+                  Simpan token saat login, lalu akses halaman yang dilindungi.
+                </p>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-              <p className="px-4 pb-3 text-[13px] leading-relaxed text-[#c2c8d5]">
-                Global Campus Recruitment 2026 is now open to students graduating between January this year and
-                December 2027 ...selengkapnya
-              </p>
-
-              <img src={posterImage} alt="Poster Campus Recruitment" className="w-full object-cover" />
-
-              <div className="grid grid-cols-4 border-t border-white/5 p-3">
-                {postFooter.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={handlePlaceholder}
-                    className="rounded-[8px] py-2 text-[15px] text-[#aeb6c6] transition hover:bg-[#252a35] hover:text-white"
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </article>
-          </section>
-
-          <aside className="space-y-4">
-            <article className="rounded-[18px] border border-white/5 bg-[#1d2027] p-4 shadow-[0_16px_32px_rgba(0,0,0,0.35)]">
-              <h3 className="text-[30px] font-semibold leading-none text-[#d9deea]">Berita</h3>
-              <p className="mt-1 text-[12px] text-[#8d94a4]">Berita Utama</p>
-              <div className="mt-4 space-y-3">
-                {rightNews.map((news, index) => (
-                  <button
-                    key={`${news.title}-${index}`}
-                    type="button"
-                    onClick={handlePlaceholder}
-                    className="block w-full text-left text-[12px] text-[#c2c9d7] hover:text-white"
-                  >
-                    <p className="leading-relaxed">{news.title}</p>
-                    <p className="mt-1 text-[10px] text-[#8a909e]">{news.snippet}</p>
-                    <p className="mt-1 text-[10px] text-[#7f8798]">
-                      {news.time} • {news.views}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </article>
-
-            <article className="overflow-hidden rounded-[18px] border border-white/5 bg-[#1d2027] shadow-[0_16px_32px_rgba(0,0,0,0.35)]">
-              <div className="p-4">
-                <p className="text-[16px] font-semibold text-[#dce2ef]">Temukan jalur karirmu, sekarang!</p>
-                <button
-                  type="button"
-                  onClick={handlePlaceholder}
-                  className="mt-3 rounded-full bg-[#1284ff] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[#3798ff]"
-                >
-                  Jelajahi Karir
-                </button>
-              </div>
-              <img src={careerImage} alt="Banner karir" className="w-full object-cover" />
-            </article>
-          </aside>
-        </section>
-      </div>
+      <section id="fitur" className="mx-auto grid max-w-7xl gap-5 px-4 pb-10 lg:grid-cols-3 lg:px-8">
+        <article className="rounded-[24px] border border-white/8 bg-[#15171d] p-6">
+          <p className="text-sm uppercase tracking-[0.25em] text-sky-400">01</p>
+          <h3 className="mt-2 text-2xl font-semibold text-white">Tes dinamis</h3>
+          <p className="mt-3 text-sm leading-6 text-[#b2b6bf]">
+            Backend menentukan total soal, frontend membaginya menjadi 4 soal per halaman.
+          </p>
+        </article>
+        <article className="rounded-[24px] border border-white/8 bg-[#15171d] p-6">
+          <p className="text-sm uppercase tracking-[0.25em] text-sky-400">02</p>
+          <h3 className="mt-2 text-2xl font-semibold text-white">Analisis otomatis</h3>
+          <p className="mt-3 text-sm leading-6 text-[#b2b6bf]">
+            Hasil diproses oleh backend dan tetap punya fallback jika AI gagal.
+          </p>
+        </article>
+        <article className="rounded-[24px] border border-white/8 bg-[#15171d] p-6">
+          <p className="text-sm uppercase tracking-[0.25em] text-sky-400">03</p>
+          <h3 className="mt-2 text-2xl font-semibold text-white">Akses aman</h3>
+          <p className="mt-3 text-sm leading-6 text-[#b2b6bf]">
+            Halaman utama, tes, dan profil hanya bisa diakses setelah login.
+          </p>
+        </article>
+      </section>
     </main>
   );
 }

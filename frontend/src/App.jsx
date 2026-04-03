@@ -4,6 +4,7 @@ import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import RequireAuth from "./pages/RequireAuth";
+import CareerTestPage from "./pages/CareerTestPage";
 
 function App() {
   return (
@@ -16,6 +17,22 @@ function App() {
         element={
           <RequireAuth>
             <HomePage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/jelajah-karir"
+        element={
+          <RequireAuth>
+            <CareerTestPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/career-test"
+        element={
+          <RequireAuth>
+            <CareerTestPage />
           </RequireAuth>
         }
       />
