@@ -1,7 +1,6 @@
 import express from "express";
 import ProfileController from "./profile.controller.js";
 import verifyMiddleware from "../middlewares/auth.middleware.js";
-import ownerShipCheck from "../middlewares/ownershipe_check.middleware.js";
 import roleCheck from "../middlewares/role.middleware.js";
 
 const route = express.Router();
@@ -37,9 +36,15 @@ const route = express.Router();
 route.get(
   "/getSpecific",
   verifyMiddleware,
-  ownerShipCheck,
-  roleCheck("USER"),
+  roleCheck("USER", "ADMIN"),
   ProfileController.findone,
+);
+
+route.patch(
+  "/updateProfile",
+  verifyMiddleware,
+  roleCheck("USER", "ADMIN"),
+  ProfileController.update,
 );
 
 export default route;

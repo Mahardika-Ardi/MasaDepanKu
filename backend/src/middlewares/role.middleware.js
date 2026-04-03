@@ -1,12 +1,12 @@
 const roleCheck = (...role) => {
-  return (res, req, next) => {
+  return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
         message: "UNAUTHORIZED",
       });
     }
 
-    if (role.includes(req.user.role)) {
+    if (!role.includes(req.user.role)) {
       return res.status(403).json({
         message: "FORBIDEN",
       });

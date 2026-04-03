@@ -1,10 +1,10 @@
-import { AuthDto } from "./dto/auth.dto.js";
+import { LoginDto, RegisterDto } from "./dto/auth.dto.js";
 import AuthService from "./auth.service.js";
 
 class AuthController {
   async register(req, res) {
     try {
-      const validated = AuthDto.parse(req.body);
+      const validated = RegisterDto.parse(req.body);
       const result = await AuthService.register(validated);
 
       res.status(201).json({
@@ -25,7 +25,7 @@ class AuthController {
 
   async login(req, res) {
     try {
-      const validated = AuthDto.parse(req.body);
+      const validated = LoginDto.parse(req.body);
       const result = await AuthService.login(validated);
 
       res.status(200).json({

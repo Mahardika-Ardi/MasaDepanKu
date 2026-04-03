@@ -1,7 +1,11 @@
 const ownerShipCheck = (req, res, next) => {
-  const paramsId = req.params.id;
-  const userId = req.user.id;
+  const paramsId = Number(req.params.id);
+  const userId = Number(req.user.id);
   const role = req.user.role;
+
+  if (Number.isNaN(paramsId)) {
+    return next();
+  }
 
   if (userId !== paramsId && role !== "ADMIN") {
     return res.status(403).json({
