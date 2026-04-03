@@ -38,6 +38,13 @@ function CareerTestPage() {
     return questions.slice(start, start + QUESTIONS_PER_PAGE);
   }, [questions, currentPage]);
 
+  const currentPageAnswered = useMemo(() => {
+    return (
+      currentQuestions.length > 0
+      && currentQuestions.every((question) => answers[question.number])
+    );
+  }, [answers, currentQuestions]);
+
   const allAnswered = useMemo(() => {
     return questions.length > 0 && questions.every((question) => answers[question.number]);
   }, [answers, questions]);
@@ -97,14 +104,22 @@ function CareerTestPage() {
   }, [navigate, token]);
 
   const setAnswer = (questionNumber, value) => {
+    setError("");
     setAnswers((prev) => ({ ...prev, [questionNumber]: value }));
   };
 
   const handleNext = () => {
+    if (!currentPageAnswered) {
+      setError("Jawab semua pertanyaan di halaman ini sebelum lanjut.");
+      return;
+    }
+
+    setError("");
     setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
   };
 
   const handleBack = () => {
+    setError("");
     setCurrentPage((prev) => Math.max(prev - 1, 0));
   };
 
@@ -331,7 +346,8 @@ function CareerTestPage() {
               <button
                 type="button"
                 onClick={handleNext}
-                className="rounded-full bg-[#0c66c2] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0a5ab0]"
+                disabled={!currentPageAnswered}
+                className="rounded-full bg-[#0c66c2] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0a5ab0] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Lanjutkan
               </button>
@@ -339,7 +355,7 @@ function CareerTestPage() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={submitting}
+                disabled={submitting || !allAnswered}
                 className="rounded-full bg-[#0c66c2] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0a5ab0] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {submitting ? "Memproses..." : "Submit"}
@@ -349,7 +365,7 @@ function CareerTestPage() {
         </div>
 
         <p className="mt-5 text-center text-sm text-[#9ea4ae]">
-          Pastikan semua pertanyaan dijawab. Backend akan mengubah total soal secara dinamis, tetapi tetap menampilkan 4 soal per halaman.
+          Pastikan semua pertanyaan dijawab sebelum submit.
         </p>
       </div>
     </main>
