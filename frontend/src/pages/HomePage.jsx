@@ -1,7 +1,11 @@
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import profilePhoto from "../assets/beranda/photo_profile.png";
 import posterImage from "../assets/beranda/rekomendasi_kampus.png";
 import careerImage from "../assets/beranda/ilustrasi_minat_bakat.png";
+
+const API_BASE_URL =
+  (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "");
 
 const topNav = ["Halaman Utama", "Jaringan Saya", "Pekerjaan", "Pesan"];
 const leftShortcuts = ["Item yang disimpan", "Grup", "Buletin", "Acara"];
@@ -34,9 +38,111 @@ const rightNews = [
   },
 ];
 
+const fallbackProfile = {
+  user: {
+    name: "Salman Falah Taqiyuddin",
+  },
+  photo_path: null,
+  profil_detail: {
+    motto: "Aspiring Mobile App Developer | Transforming Ideas into Reality wit...",
+    city: "Kota Malang",
+    country: "Jawa Timur",
+  },
+};
+
+function safeParseJson(raw) {
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function resolveImageSource(photoPath) {
+  if (!photoPath) {
+    return profilePhoto;
+  }
+
+  if (photoPath.startsWith("http://") || photoPath.startsWith("https://") || photoPath.startsWith("/")) {
+    return photoPath;
+  }
+
+  return profilePhoto;
+}
+
 function HomePage() {
   const navigate = useNavigate();
   const handlePlaceholder = () => {};
+  const [profile, setProfile] = useState(fallbackProfile);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setProfile(fallbackProfile);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/profile/getSpecific`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const raw = await response.text();
+        const data = safeParseJson(raw);
+
+        if (!response.ok || !data?.Success) {
+          throw new Error(data?.Message || "Gagal mengambil data profil");
+        }
+
+        setProfile({
+          user: {
+            name: data.Information?.user?.name || fallbackProfile.user.name,
+          },
+          photo_path: data.Information?.photo_path ?? null,
+          profil_detail: {
+            motto: data.Information?.profil_detail?.motto || fallbackProfile.profil_detail.motto,
+            city: data.Information?.profil_detail?.city || fallbackProfile.profil_detail.city,
+            country: data.Information?.profil_detail?.country || fallbackProfile.profil_detail.country,
+          },
+        });
+      } catch {
+        setProfile(fallbackProfile);
+      }
+    };
+
+    loadProfile();
+  }, []);
+
+  const displayName = useMemo(() => {
+    return profile.user?.name || fallbackProfile.user.name;
+  }, [profile]);
+
+  const displayMotto = useMemo(() => {
+    return profile.profil_detail?.motto || fallbackProfile.profil_detail.motto;
+  }, [profile]);
+
+  const displayLocation = useMemo(() => {
+    const city = profile.profil_detail?.city;
+    const country = profile.profil_detail?.country;
+
+    if (city && country) {
+      return `${city}, ${country}`;
+    }
+
+    return city || country || "Lokasi belum diisi";
+  }, [profile]);
+
+  const profileImageSource = useMemo(() => {
+    return resolveImageSource(profile.photo_path);
+  }, [profile]);
 
   return (
     <main className="min-h-screen bg-[#191b22] text-[#d7dae2]">
@@ -78,18 +184,16 @@ function HomePage() {
               <div className="h-[90px] bg-gradient-to-r from-[#0f1118] via-[#2c2f3a] to-[#11131b]" />
               <div className="relative px-4 pb-4">
                 <img
-                  src={profilePhoto}
+                  src={profileImageSource}
                   alt="Foto profil"
                   className="absolute -top-10 h-20 w-20 rounded-full border-[3px] border-[#1d2027] object-cover"
                 />
                 <div className="pt-12">
                   <h2 className="text-[20px] font-semibold leading-tight text-white">
-                    Salman Falah Taqiyu...
+                    {displayName}
                   </h2>
-                  <p className="mt-1 text-[13px] text-[#aeb4c2]">
-                    Aspiring Mobile App Developer | Transforming Ideas into Reality wit...
-                  </p>
-                  <p className="mt-1 text-[11px] text-[#8b92a1]">Kota Malang, Jawa Timur</p>
+                  <p className="mt-1 text-[13px] text-[#aeb4c2]">{displayMotto}</p>
+                  <p className="mt-1 text-[11px] text-[#8b92a1]">{displayLocation}</p>
                   <button
                     type="button"
                     onClick={handlePlaceholder}
@@ -141,7 +245,7 @@ function HomePage() {
           <section className="space-y-4">
             <article className="rounded-[18px] border border-white/5 bg-[#1d2027] p-4 shadow-[0_16px_32px_rgba(0,0,0,0.35)]">
               <div className="mb-3 flex items-center gap-3">
-                <img src={profilePhoto} alt="Foto profil kecil" className="h-10 w-10 rounded-full object-cover" />
+                <img src={profileImageSource} alt="Foto profil kecil" className="h-10 w-10 rounded-full object-cover" />
                 <button
                   type="button"
                   onClick={handlePlaceholder}

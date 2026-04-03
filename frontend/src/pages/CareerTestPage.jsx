@@ -6,6 +6,22 @@ const API_BASE_URL =
 
 const QUESTIONS_PER_PAGE = 4;
 
+const CATEGORY_LABELS = {
+  teknis: "Teknis",
+  sosial: "Sosial",
+  kreatif: "Kreatif",
+  analitis: "Analitis",
+  manajerial: "Manajerial",
+};
+
+const CATEGORY_JOBS = {
+  teknis: ["Software Engineer", "IT Support Specialist", "QA Engineer"],
+  sosial: ["HR Officer", "Customer Success Associate", "Konselor"],
+  kreatif: ["UI/UX Designer", "Content Creator", "Brand Designer"],
+  analitis: ["Data Analyst", "Business Analyst", "Research Assistant"],
+  manajerial: ["Project Coordinator", "Product Owner", "Operations Supervisor"],
+};
+
 async function parseResponse(response) {
   const raw = await response.text();
 
@@ -14,6 +30,65 @@ async function parseResponse(response) {
   } catch {
     return null;
   }
+}
+
+function buildDummyAnalysis(questions, answers) {
+  const scoreByCategory = {
+    teknis: 0,
+    sosial: 0,
+    kreatif: 0,
+    analitis: 0,
+    manajerial: 0,
+  };
+
+  questions.forEach((question) => {
+    const score = Number(answers[question.number] || 0);
+    scoreByCategory[question.category] += score;
+  });
+
+  const sortedCategories = Object.entries(scoreByCategory).sort(
+    (left, right) => right[1] - left[1],
+  );
+  const topCategory = sortedCategories[0]?.[0] || "analitis";
+  const secondCategory = sortedCategories[1]?.[0] || "teknis";
+  const lowestCategory = sortedCategories[sortedCategories.length - 1]?.[0] || "sosial";
+
+  const recommendedJobs = [
+    ...(CATEGORY_JOBS[topCategory] || []),
+    ...(CATEGORY_JOBS[secondCategory] || []),
+  ]
+    .slice(0, 4)
+    .map((title) => ({
+      title,
+      reason: `Kecenderungan Anda cukup kuat pada area ${CATEGORY_LABELS[topCategory]} dan ${CATEGORY_LABELS[secondCategory]}.`,
+    }));
+
+  return {
+    generated_by: "dummy-result",
+    group_question_id: null,
+    total_questions: questions.length,
+    ai_enabled: false,
+    scores: scoreByCategory,
+    analysis: {
+      summary: `Berdasarkan jawaban Anda, kecenderungan terkuat ada pada area ${CATEGORY_LABELS[topCategory]} dan ${CATEGORY_LABELS[secondCategory]}. Ini menunjukkan Anda cocok pada peran yang membutuhkan kombinasi kekuatan tersebut.`,
+      competency_analysis: {
+        strengths: [
+          `Kecenderungan ${CATEGORY_LABELS[topCategory]} cukup menonjol.`,
+          `Kecenderungan ${CATEGORY_LABELS[secondCategory]} mendukung pilihan karier Anda.`,
+        ],
+        areas_of_improvement: [
+          `Perlu menyeimbangkan area ${CATEGORY_LABELS[lowestCategory]} agar profil Anda lebih lengkap.`,
+          "Perlu melatih konsistensi dalam menjawab tantangan yang kompleks.",
+        ],
+      },
+      recommended_jobs: recommendedJobs,
+      actionable_advice: [
+        `Ikuti kursus atau pelatihan yang relevan dengan area ${CATEGORY_LABELS[topCategory]}.`,
+        "Bangun portofolio sederhana dari proyek nyata.",
+        "Cari komunitas atau mentor untuk memperkuat arah karier Anda.",
+      ],
+    },
+  };
 }
 
 function CareerTestPage() {
@@ -133,42 +208,9 @@ function CareerTestPage() {
     setError("");
 
     try {
-      const submitResponse = await fetch(`${API_BASE_URL}/useranswer/submit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          group_question_id: groupQuestionId,
-          answers: questions.map((question) => answers[question.number]),
-        }),
-      });
-
-      const submitData = await parseResponse(submitResponse);
-
-      if (!submitResponse.ok || !submitData?.Success) {
-        throw new Error(submitData?.Message || "Gagal menyimpan jawaban");
-      }
-
-      const analysisResponse = await fetch(`${API_BASE_URL}/analysis/run`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ group_question_id: groupQuestionId }),
-      });
-
-      const analysisData = await parseResponse(analysisResponse);
-
-      if (!analysisResponse.ok || !analysisData?.Success) {
-        throw new Error(analysisData?.Message || "Gagal menghasilkan analisis");
-      }
-
-      setAnalysisResult(analysisData.Information);
+      setAnalysisResult(buildDummyAnalysis(questions, answers));
     } catch (submitError) {
-      setError(submitError.message || "Gagal submit jawaban");
+      setError(submitError.message || "Gagal menampilkan hasil");
     } finally {
       setSubmitting(false);
     }
