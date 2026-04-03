@@ -1,7 +1,7 @@
-export const buildQuestionPrompt =
-  `Kamu adalah AI yang bertugas membuat soal tes minat dan bakat.
+export function buildQuestionPrompt(totalQuestions = 20) {
+  return `Kamu adalah AI yang bertugas membuat soal tes minat dan bakat.
 
-Buatkan 20 pertanyaan untuk tes minat dan bakat (career interest test).
+Buatkan ${totalQuestions} pertanyaan untuk tes minat dan bakat (career interest test).
 
 Aturan:
 - Setiap pertanyaan harus jelas, singkat, dan mudah dipahami
@@ -26,9 +26,10 @@ Format output WAJIB seperti ini:
 ]
 
 Ketentuan:
-- Total 20 soal
+- Total ${totalQuestions} soal
 - Setiap kategori memiliki 4 soal
 - Semua soal berbeda
 - Jangan tambahkan penjelasan di luar JSON
-- Output HARUS valid JSON`.trim();
+ - Output HARUS valid JSON`.trim();
+}
 

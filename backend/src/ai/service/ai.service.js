@@ -13,8 +13,8 @@ function normalizeText(rawText) {
   return cleaned;
 }
 class AiService {
-  async GenerateQuestion() {
-    const prompt = buildQuestionPrompt;
+  async GenerateQuestion(totalQuestions = 20) {
+    const prompt = buildQuestionPrompt(totalQuestions);
     const raw = await generateText(prompt, {
       temperature: 0.6,
     });
