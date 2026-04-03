@@ -9,19 +9,17 @@ const answerSchema = z.object({
 });
 
 const QuestionSchema = z.object({
-  number: z.number().int().min(1).max(20),
+  number: z.number().int().min(1),
   question: z.string().nonempty(),
   answer: answerSchema,
   category: z.enum(["teknis", "sosial", "kreatif", "analitis", "manajerial"]),
 });
 
-const QuestionListSchema = z.array(QuestionSchema).length(20);
-
-export const QuestionPayloadSchema = z
+const QuestionPayloadSchema = z
   .union([
-    QuestionListSchema,
+    z.array(QuestionSchema),
     z.object({
-      questions: QuestionListSchema,
+      questions: z.array(QuestionSchema),
     }),
   ])
   .transform((value) => {
@@ -31,3 +29,16 @@ export const QuestionPayloadSchema = z
 
     return value.questions;
   });
+
+export function parseQuestionPayload(rawPayload, totalQuestions) {
+  const parsed = QuestionPayloadSchema.parse(rawPayload);
+
+  if (parsed.length !== totalQuestions) {
+    throw {
+      code: "BAD_REQUEST",
+      message: `Question count mismatch. Expected ${totalQuestions}, received ${parsed.length}`,
+    };
+  }
+
+  return parsed;
+}

@@ -5,7 +5,9 @@ import AiService from "../ai/service/ai.service.js";
 class QuestionService {
   async create(data) {
     try {
-      const generatedQuestion = await AiService.GenerateQuestion();
+      const generatedQuestion = await AiService.GenerateQuestion(
+        data.total_questions,
+      );
 
       const result = await prisma.$transaction(async (tx) => {
         const addGroupQuestion = await tx.groupQuestion.create({
@@ -28,6 +30,8 @@ class QuestionService {
         return {
           generated_by: addGroupQuestion.user_id,
           group_question_id: addGroupQuestion.id,
+          total_questions: question.length,
+          questions_per_page: 4,
           question,
         };
       });

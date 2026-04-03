@@ -1,16 +1,15 @@
 import { UseranswerCreateDto } from "./dto/useranswer_create.dto.js";
-import { UseranswerUpdateDto } from "./dto/useranswer_update.dto.js";
 import UseranswerService from "./useranswer.service.js";
 
 class UseranswerController {
   async create(req, res) {
     try {
       const validated = UseranswerCreateDto.parse(req.body);
-      const result = await UseranswerService.register(validated);
+      const result = await UseranswerService.create(req.user.id, validated);
 
       res.status(200).json({
         Success: true,
-        Message: "",
+        Message: "User answers submitted successfully",
         Information: result,
         Error: null,
       });
@@ -23,71 +22,14 @@ class UseranswerController {
       });
     }
   }
-  async findall(req, res) {
+
+  async findLatest(req, res) {
     try {
-      const result = await UseranswerService.register(req.body);
+      const result = await UseranswerService.findLatest(req.user.id);
 
       res.status(200).json({
         Success: true,
-        Message: "",
-        Information: result,
-        Error: null,
-      });
-    } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error ->",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
-    }
-  }
-  async findone(req, res) {
-    try {
-      const result = await UseranswerService.register(req.body);
-
-      res.status(200).json({
-        Success: true,
-        Message: "",
-        Information: result,
-        Error: null,
-      });
-    } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error ->",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
-    }
-  }
-  async update(req, res) {
-    try {
-      const validated = UseranswerUpdateDto.parse(req.body);
-      const result = await UseranswerService.register(validated);
-
-      res.status(200).json({
-        Success: true,
-        Message: "",
-        Information: result,
-        Error: null,
-      });
-    } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error ->",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
-    }
-  }
-  async delete(req, res) {
-    try {
-      const result = await UseranswerService.register(req.body);
-
-      res.status(200).json({
-        Success: true,
-        Message: "",
+        Message: "Latest user answers fetched successfully",
         Information: result,
         Error: null,
       });

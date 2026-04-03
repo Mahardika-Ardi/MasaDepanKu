@@ -1,14 +1,14 @@
 import z from "zod";
 
 export const careerAnalysisSchemas = z.object({
-  sumarry: z.string().min(10, "Sumarry too short"),
+  summary: z.string().min(10, "Summary too short"),
   competency_analysis: z.object({
     strengths: z
       .array(z.string())
       .min(1, "Add minimum, there has to be at least 1 strength"),
-    areas_of_improvment: z
+    areas_of_improvement: z
       .array(z.string())
-      .min(1, "Add minimum, there has to be at least 1 Areas of Improvment"),
+      .min(1, "Add minimum, there has to be at least 1 area of improvement"),
   }),
 
   recommended_jobs: z

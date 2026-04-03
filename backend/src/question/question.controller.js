@@ -4,9 +4,10 @@ import QuestionService from "./question.service.js";
 class QuestionController {
   async create(req, res) {
     const user_id = req.user.id;
+    const total_questions = req.body?.total_questions;
 
     try {
-      const validated = QuestionCreateDto.parse({ user_id });
+      const validated = QuestionCreateDto.parse({ user_id, total_questions });
 
       if (!validated) {
         res.status(500).json({

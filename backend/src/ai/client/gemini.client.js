@@ -1,12 +1,21 @@
 import { GoogleGenAI } from "@google/genai";
 
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  throw new Error("Gemini API is not set yet!");
-}
-
 const DEFAULT_MODEL = "gemini-2.5-flash";
-const ai = new GoogleGenAI({ apiKey });
+let aiClient = null;
+
+function getAiClient() {
+  if (aiClient) {
+    return aiClient;
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("Gemini API is not set yet!");
+  }
+
+  aiClient = new GoogleGenAI({ apiKey });
+  return aiClient;
+}
 
 export async function generateText(prompt, options = {}) {
   if (!prompt) {
@@ -14,7 +23,7 @@ export async function generateText(prompt, options = {}) {
   }
 
   const { model = DEFAULT_MODEL, temperature, maxOutputTokens } = options;
-  const respons = await ai.models.generateContent({
+  const respons = await getAiClient().models.generateContent({
     model,
     contents: prompt,
     config: {
