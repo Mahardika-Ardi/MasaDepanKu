@@ -22,6 +22,7 @@ class UseranswerController {
       });
     }
   }
+
   async findall(req, res) {
     try {
       const result = await UseranswerService.findall(req.user.id);

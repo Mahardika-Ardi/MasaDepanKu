@@ -2,10 +2,8 @@ import QuestionService from "./question.service.js";
 
 class QuestionController {
   async create(req, res) {
-    const id = req.user.id;
-
     try {
-      const result = await QuestionService.create(id);
+      const result = await QuestionService.create(req.user.id);
 
       res.status(200).json({
         Success: true,

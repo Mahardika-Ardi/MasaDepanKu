@@ -16,13 +16,12 @@ function normalizeText(rawText) {
 }
 class AiService {
   async GenerateQuestion() {
-    const prompt = buildQuestionPrompt;
+    const prompt = buildQuestionPrompt();
     const raw = await generateText(prompt, { temperature: 0.6 });
 
     const normal = normalizeText(raw);
     const json = JSON.parse(normal);
     const parsed = QuestionPayloadSchema.parse(json);
-
     return parsed;
   }
 

@@ -10,7 +10,9 @@ const ai = new GoogleGenAI({ apiKey });
 
 export async function generateText(prompt, options = {}) {
   if (!prompt) {
-    throw new Error("Prompt is not set yet");
+    throw new Error({
+      message: "Prompt is not set yet",
+    });
   }
 
   const { model = DEFAULT_MODEL, temperature, maxOutputTokens } = options;
