@@ -5,7 +5,7 @@ import chalk from "chalk";
 
 const adapter = new PrismaMariaDb({
   host: process.env.DATABASE_HOST,
-  port: Number(process.env.DATABASE_PORT),
+  port: process.env.DATABASE_PORT,
   user: process.env.DATABASE_USER,
   database: process.env.DATABASE_NAME,
   connectionLimit: 5,

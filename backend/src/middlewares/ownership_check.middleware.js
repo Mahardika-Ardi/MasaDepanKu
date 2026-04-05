@@ -23,4 +23,3 @@ const ownerShipCheck = (req, res, next) => {
 };
 
 export default ownerShipCheck;
-// BUG <-----------

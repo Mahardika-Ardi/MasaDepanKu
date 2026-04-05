@@ -34,7 +34,6 @@ class ProfileService {
   async update(id, data) {
     const secureURL = data.file.path;
     const publicId = data.file.filename;
-    console.log(publicId);
 
     try {
       const existingPhotoProfile = await prisma.photoProfile.findFirst({

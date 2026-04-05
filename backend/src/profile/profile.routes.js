@@ -1,7 +1,7 @@
 import express from "express";
 import ProfileController from "./profile.controller.js";
 import verifyMiddleware from "../middlewares/auth.middleware.js";
-import ownerShipCheck from "../middlewares/ownershipe_check.middleware.js";
+import ownerShipCheck from "../middlewares/ownership_check.middleware.js";
 import roleCheck from "../middlewares/role.middleware.js";
 import { uploadSingleImageCloudinary } from "../middlewares/upload.middleware.js";
 
