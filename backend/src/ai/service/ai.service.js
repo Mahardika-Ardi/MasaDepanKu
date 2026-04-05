@@ -26,10 +26,9 @@ class AiService {
     return parsed;
   }
 
-  async AnalysisData(score, question, answer) {
-    const prompt = analysisPrompt(score, question, answer);
+  async AnalysisData(score, question, answer, jurusan) {
+    const prompt = analysisPrompt(score, question, answer, jurusan);
     const raw = await generateText(prompt, { temperature: 0.7 });
-
 
     const cleanedText = normalizeText(raw);
     const parsed = JSON.parse(cleanedText);

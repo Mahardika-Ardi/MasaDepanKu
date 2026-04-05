@@ -1,6 +1,6 @@
-import fs from "fs";
 import { ProfileUpdateDto } from "./dto/profile_update.dto.js";
 import ProfileService from "./profile.service.js";
+import cloudinary from "../config/cloudinary.config.js";
 
 class ProfileController {
   async findone(req, res) {
@@ -22,20 +22,24 @@ class ProfileController {
       });
     }
   }
-  async update(req, res) {
-    const data = {
-      file: req.file.filename,
-      jurusan: req.body.jurusan,
-      raport: req.body.raport ? JSON.parse(req.body.raport) : null,
-    };
 
+  async update(req, res) {
     try {
+      const data = {
+        file: {
+          path: req.file.path,
+          filename: req.file.filename,
+        },
+        jurusan: req.body.jurusan,
+        raport: req.body.raport ? JSON.parse(req.body.raport) : undefined,
+      };
+
       const validated = ProfileUpdateDto.parse(data);
 
       if (!validated) {
-        res.status(500).json({
+        return res.status(500).json({
           Message:
-            "Error -> Data type is not valid or data blak ( undifined / null )",
+            "Error -> Data type is not valid or data blank ( undifined / null )",
           Information: null,
         });
       }
@@ -49,9 +53,10 @@ class ProfileController {
         Error: null,
       });
     } catch (error) {
-      if (req.file) {
-        fs.unlinkSync(req.file.path);
+      if (req.file.filename) {
+        await cloudinary.uploader.destroy(req.file.filename);
       }
+
       res.status(500).json({
         Success: false,
         Message: "Error -> Failed to updating profile",

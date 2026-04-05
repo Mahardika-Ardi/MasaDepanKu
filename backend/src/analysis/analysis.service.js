@@ -3,13 +3,38 @@ import prisma from "../config/prisma.config.js";
 import prismaErrors from "../utils/prisma_errors.utils.js";
 
 class AnalysisService {
-  async analysis(id, data) {
+  async analysis(id) {
     try {
-      const Analysis = await prisma.$transaction([
-        prisma.profilDetail.findFirst({ where: { user_id: id } }),
-        // prisma.
-      ]);
-      const AiResponse = await AiService.AnalysisData();
+      const find = await prisma.testSession.findFirst({
+        where: { userId: id },
+        select: {
+          user: {
+            select: {
+              profilDetail: { select: { raportScore: true, jurusan: true } },
+            },
+          },
+          question: { orderBy: { number: "asc" } },
+          answers: { orderBy: { questionId: "asc" } },
+        },
+      });
+
+      if (!find) {
+        throw {
+          message: "Failed showwing answer!",
+          code: "BAD_REQUEST",
+        };
+      }
+
+      const AiResponse = await AiService.AnalysisData(
+        find.user.profilDetail.raportScore,
+        find.question,
+        find.answers,
+        find.user.profilDetail.jurusan,
+      );
+
+      console.log(AiResponse);
+
+      return AiResponse;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);

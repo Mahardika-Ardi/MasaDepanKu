@@ -1,21 +1,27 @@
 import express from "express";
-import UseranswerController from "./useranswer.controller.js";
+import TestsessionController from "./testsession.controller.js";
 import verifyMiddleware from "../middlewares/auth.middleware.js";
 import ownerShipCheck from "../middlewares/ownershipe_check.middleware.js";
 
 const route = express.Router();
 
-route.post(
-  "/createAnswer",
-  verifyMiddleware,
-  ownerShipCheck,
-  UseranswerController.create,
-);
 route.get(
-  "/createAnswer",
+  "/findTestSession",
   verifyMiddleware,
   ownerShipCheck,
-  UseranswerController.findall,
+  TestsessionController.find,
+);
+route.patch(
+  "/finishTest",
+  verifyMiddleware,
+  ownerShipCheck,
+  TestsessionController.finish,
+);
+route.patch(
+  "/cancelTest",
+  verifyMiddleware,
+  ownerShipCheck,
+  TestsessionController.cancel,
 );
 
 export default route;

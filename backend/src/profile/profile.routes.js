@@ -3,7 +3,7 @@ import ProfileController from "./profile.controller.js";
 import verifyMiddleware from "../middlewares/auth.middleware.js";
 import ownerShipCheck from "../middlewares/ownershipe_check.middleware.js";
 import roleCheck from "../middlewares/role.middleware.js";
-import { uploadSingleImage } from "../middlewares/upload.middleware.js";
+import { uploadSingleImageCloudinary } from "../middlewares/upload.middleware.js";
 
 const route = express.Router();
 
@@ -100,7 +100,7 @@ route.patch(
   verifyMiddleware,
   ownerShipCheck,
   roleCheck("USER"),
-  uploadSingleImage,
+  uploadSingleImageCloudinary,
   ProfileController.update,
 );
 

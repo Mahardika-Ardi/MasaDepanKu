@@ -18,10 +18,13 @@ const route = express.Router();
  *             properties:
  *               name:
  *                 type: string
+ *                 example: john
  *               email:
  *                 type: string
+ *                 example: john@gmail.com
  *               password:
  *                 type: string
+ *                 example: john123
  *     responses:
  *       201:
  *         description: User created
@@ -43,8 +46,10 @@ route.post("/register", AuthController.register);
  *             properties:
  *               email:
  *                 type: string
+ *                 example: john@gmail.com
  *               password:
  *                 type: string
+ *                 example: john123
  *     responses:
  *       200:
  *         description: LogIn Successfully

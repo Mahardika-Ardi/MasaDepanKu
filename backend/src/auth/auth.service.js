@@ -13,34 +13,20 @@ class AuthService {
           name: data.name,
           email: data.email,
           password: hashed,
+          photoProfiles: { create: {} },
+          profilDetail: { create: {} },
         },
+        select: { id: true, name: true, email: true, role: true },
       });
 
       if (!add) {
-        throw new Error({
+        throw {
           message: "Failed Creating Users!",
           code: "BAD_REQUEST",
-        });
+        };
       }
 
-      const addProfileLink = await prisma.$transaction([
-        prisma.photoProfile.create({ data: { user_id: add.id } }),
-        prisma.profilDetail.create({ data: { user_id: add.id } }),
-      ]);
-
-      if (!addProfileLink) {
-        throw new Error({
-          message: "Failed Creating Users!",
-          code: "BAD_REQUEST",
-        });
-      }
-
-      return {
-        id: add.id,
-        name: add.name,
-        email: add.email,
-        role: add.role,
-      };
+      return add;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
@@ -64,10 +50,10 @@ class AuthService {
       const compare = await comparePassword(data.password, find.password);
 
       if (!compare) {
-        throw new Error({
+        throw {
           message: "LogIn failed invalid credential, try again!",
           code: "BAD_REQUEST",
-        });
+        };
       }
 
       const payload = {

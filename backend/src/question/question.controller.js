@@ -1,22 +1,11 @@
-import { QuestionCreateDto } from "./dto/question_create.dto.js";
 import QuestionService from "./question.service.js";
 
 class QuestionController {
   async create(req, res) {
-    const user_id = req.user.id;
+    const id = req.user.id;
 
     try {
-      const validated = QuestionCreateDto.parse({ user_id });
-
-      if (!validated) {
-        res.status(500).json({
-          Message:
-            "Error -> Data type is not valid or data blak ( undifined / null )",
-          Information: null,
-        });
-      }
-
-      const result = await QuestionService.create(validated);
+      const result = await QuestionService.create(id);
 
       res.status(200).json({
         Success: true,

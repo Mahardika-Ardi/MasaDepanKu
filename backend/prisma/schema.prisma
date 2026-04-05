@@ -14,62 +14,63 @@ model Users {
   password String
   role     Role   @default(USER)
 
-  photoProfiles    PhotoProfile?
-  profilDetail     ProfilDetail?
-  groupQuestions   GroupQuestion[]
-  userAnswerGroups UserAnswerGroup[]
+  photoProfiles PhotoProfile?
+  profilDetail  ProfilDetail?
+  testSessions  TestSession[]
 }
 
 model PhotoProfile {
-  id      Int     @id @default(autoincrement())
-  user_id Int     @unique
-  file    String?
+  id       Int     @id @default(autoincrement())
+  userId   Int     @unique
+  file     String?
+  publicId String?
 
-  user Users @relation(fields: [user_id], references: [id])
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ProfilDetail {
-  id           Int     @id @default(autoincrement())
-  user_id      Int     @unique
-  jurusan      String?
-  raport_score Json?
+  id          Int     @id @default(autoincrement())
+  userId      Int     @unique
+  jurusan     String?
+  raportScore Json?
 
-  user Users @relation(fields: [user_id], references: [id])
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model GroupQuestion {
-  id      Int @id @default(autoincrement())
-  user_id Int
+model TestSession {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  status     Status   @default(PENDING)
+  aiAnalysis Json?
+  createdAt  DateTime @default(now())
 
-  questions Question[]
-  user      Users      @relation(fields: [user_id], references: [id])
+  user     Users        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question[]
+  answers  UserAnswer[]
 }
 
 model Question {
-  id       Int      @id @default(autoincrement())
-  number   Int
-  question String
-  answer   Json
-  category Category
-  group_id Int
+  id        Int      @id @default(autoincrement())
+  sessionId Int
+  number    Int
+  question  String
+  answer    Json
+  category  Category
 
-  group_question GroupQuestion @relation(fields: [group_id], references: [id])
-}
-
-model UserAnswerGroup {
-  id      Int @id @default(autoincrement())
-  user_id Int
-
-  user        Users        @relation(fields: [user_id], references: [id])
-  userAnswers UserAnswer[]
+  session TestSession  @relation(fields: [sessionId], references: [id])
+  answers UserAnswer[]
 }
 
 model UserAnswer {
-  id       Int @id @default(autoincrement())
-  group_id Int
-  value    Int
+  id         Int @id @default(autoincrement())
+  sessionId  Int
+  questionId Int
+  value      Int
 
-  useranswergroup UserAnswerGroup @relation(fields: [group_id], references: [id])
+  session  TestSession @relation(fields: [sessionId], references: [id])
+  question Question    @relation(fields: [questionId], references: [id])
+
+  @@unique([sessionId, questionId])
 }
 
 enum Role {
@@ -83,4 +84,10 @@ enum Category {
   kreatif
   analitis
   manajerial
+}
+
+enum Status {
+  PENDING
+  COMPLETED
+  FAILED
 }

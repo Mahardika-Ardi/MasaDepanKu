@@ -1,26 +1,27 @@
+import cloudinary from "../config/cloudinary.config.js";
 import prisma from "../config/prisma.config.js";
 import prismaErrors from "../utils/prisma_errors.utils.js";
 
 class ProfileService {
-  async findone(data) {
+  async findone(id) {
     try {
-      const [findPhoto, findProfileDetail] = await prisma.$transaction([
-        prisma.photoProfile.findFirst({ where: { user_id: data } }),
-        prisma.profilDetail.findFirst({ where: { user_id: data } }),
-      ]);
+      const findProfile = await prisma.users.findFirst({
+        where: { id },
+        select: {
+          photoProfiles: { select: { file: true } },
+          profilDetail: { select: { jurusan: true, raportScore: true } },
+        },
+      });
 
-      if (!findPhoto && findProfileDetail) {
-        throw new Error({
-          message: "Failed showing profil detail!",
-          code: "BAD_REQUEST",
-        });
+      if (!findProfile) {
+        throw new Error("Failed getting profile!");
       }
 
       return {
-        photo_path: findPhoto.file,
+        photo_path: findProfile.photoProfiles.file,
         profil_detail: {
-          jurusan: findProfileDetail.jurusan,
-          raport: findProfileDetail.raport_score,
+          jurusan: findProfile.profilDetail.jurusan,
+          raport: findProfile.profilDetail.raportScore,
         },
       };
     } catch (error) {
@@ -31,39 +32,53 @@ class ProfileService {
   }
 
   async update(id, data) {
+    const secureURL = data.file.path;
+    const publicId = data.file.filename;
+    console.log(publicId);
+
     try {
-      const updt = await prisma.$transaction(async (tx) => {
-        await tx.photoProfile.update({
-          where: { user_id: Number(id) },
-          data: { file: data.file },
-        });
-        await tx.profilDetail.update({
-          where: { user_id: Number(id) },
-          data: { jurusan: data.jurusan, raport_score: data.raport },
-        });
-
-        const [findPhoto, findProfileDetail] = await Promise.all([
-          await tx.photoProfile.findFirst({ where: { user_id: Number(id) } }),
-          await tx.profilDetail.findFirst({ where: { user_id: Number(id) } }),
-        ]);
-
-        return {
-          photo_path: findPhoto.file,
-          profil_detail: {
-            jurusan: findProfileDetail.jurusan,
-            raport: findProfileDetail.raport_score,
-          },
-        };
+      const existingPhotoProfile = await prisma.photoProfile.findFirst({
+        where: { userId: id },
       });
 
-      if (!updt) {
-        throw new Error({
-          message: "Failed updating profil!",
-          code: "BAD_REQUEST",
-        });
+      if (!existingPhotoProfile) {
+        throw new Error("Failed updating profil!");
       }
 
-      return updt;
+      const updtusr = await prisma.users.update({
+        where: { id },
+        data: {
+          photoProfiles: {
+            update: { file: secureURL, publicId: publicId },
+          },
+          profilDetail: {
+            update: { jurusan: data.jurusan, raportScore: data.raport },
+          },
+        },
+        select: {
+          photoProfiles: { select: { file: true } },
+          profilDetail: { select: { jurusan: true, raportScore: true } },
+        },
+      });
+
+      if (existingPhotoProfile && existingPhotoProfile.publicId) {
+        await cloudinary.uploader.destroy(existingPhotoProfile.publicId);
+      }
+
+      if (!updtusr) {
+        throw {
+          message: "Failed updating profil!",
+          code: "BAD_REQUEST",
+        };
+      }
+
+      return {
+        photo_path: updtusr.photoProfiles.file,
+        profil_detail: {
+          jurusan: updtusr.profilDetail.jurusan,
+          raport: updtusr.profilDetail.raportScore,
+        },
+      };
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);

@@ -4,48 +4,64 @@ import prismaErrors from "../utils/prisma_errors.utils.js";
 class UseranswerService {
   async create(data) {
     try {
-      await prisma.users.create();
-      //logic
+      const saveAnswer = await prisma.userAnswer.upsert({
+        where: {
+          sessionId_questionId: {
+            sessionId: Number(data.sessionId),
+            questionId: Number(data.questionId),
+          },
+        },
+        update: {
+          value: Number(data.value),
+        },
+
+        create: {
+          sessionId: Number(data.sessionId),
+          questionId: Number(data.questionId),
+          value: Number(data.value),
+        },
+      });
+
+      if (!saveAnswer) {
+        throw {
+          message: "Failed saving question answer!",
+          code: "BAD_REQUEST",
+        };
+      }
+
+      return saveAnswer;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
       throw error || prismaError;
     }
   }
-  async findall() {
+
+  async findall(id) {
     try {
-      // await prisma.users.findMany();
-      //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
-  }
-  async findone(id) {
-    try {
-      // await prisma.users.findFirst();
-      //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
-  }
-  async update(id, data) {
-    try {
-      // await prisma.users.update();
-      //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
-  }
-  async delete(id) {
-    try {
-      // await prisma.users.delete();
-      //logic
+      const showAllAnswer = await prisma.userAnswer.findMany({
+        where: { session: { userId: id } },
+        include: {
+          question: {
+            select: {
+              number: true,
+              question: true,
+              answer: true,
+              category: true,
+            },
+          },
+        },
+        orderBy: { question: { number: "asc" } },
+      });
+
+      if (!showAllAnswer) {
+        throw {
+          message: "Failed showwing answer!",
+          code: "BAD_REQUEST",
+        };
+      }
+
+      return showAllAnswer;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
