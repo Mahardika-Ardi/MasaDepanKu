@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+const API_BASE_URL =
+  (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "");
+
 function RegisterPage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +32,7 @@ function RegisterPage() {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/register`,
+        `${API_BASE_URL}/auth/register`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -37,19 +40,31 @@ function RegisterPage() {
         },
       );
 
-      const data = await response.json();
+      const raw = await response.text();
+      let data = null;
 
-      if (!response.ok || !data.Success) {
-        throw new Error(data.Message || "Register gagal");
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch {
+        data = null;
+      }
+
+      if (!response.ok || !data?.Success) {
+        throw new Error(data?.Message || "Register gagal");
+      }
+
+      const token = data?.Information?.token;
+      if (token) {
+        localStorage.setItem("token", token);
       }
 
       setStatus({
         loading: false,
-        message: "Register berhasil. Silakan login.",
+        message: "Register berhasil.",
         error: false,
       });
       setForm({ name: "", email: "", password: "" });
-      setTimeout(() => navigate("/login"), 700);
+      navigate("/beranda", { replace: true });
     } catch (error) {
       setStatus({ loading: false, message: error.message, error: true });
     }

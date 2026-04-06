@@ -8,7 +8,7 @@ MasaDepanKu adalah aplikasi **web fullstack** untuk membantu pengguna mempersiap
 
 Project ini menggunakan arsitektur **monorepo npm workspaces** dengan dua aplikasi utama:
 
-- `backend` → REST API (Express + Prisma + MySQL/MariaDB)
+- `backend` → REST API (Express + Prisma + MySQL)
 - `frontend` → UI (React + Vite + Tailwind CSS)
 
 ---

@@ -1,7 +1,11 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
+const API_BASE_URL =
+  (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "");
 
 function LoginPage() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [status, setStatus] = useState({
     loading: false,
@@ -24,7 +28,7 @@ function LoginPage() {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/login`,
+        `${API_BASE_URL}/auth/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -32,17 +36,26 @@ function LoginPage() {
         },
       );
 
-      if (!response.ok || !data.Success) {
-        throw new Error(data.Message || "Login gagal");
+      const raw = await response.text();
+      let data = null;
+
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch {
+        data = null;
       }
 
-      const data = await response.json();
+      if (!response.ok || !data?.Success) {
+        throw new Error(data?.Message || "Login gagal");
+      }
+
       const token = data?.Information?.token;
       if (token) {
         localStorage.setItem("token", token);
       }
 
       setStatus({ loading: false, message: "Login berhasil.", error: false });
+      navigate("/beranda", { replace: true });
     } catch (error) {
       setStatus({ loading: false, message: error.message, error: true });
     }

@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
@@ -29,10 +29,22 @@ model PhotoProfile {
 }
 
 model ProfilDetail {
+<<<<<<< HEAD
   id          Int     @id @default(autoincrement())
   userId      Int     @unique
   jurusan     String?
   raportScore Json?
+=======
+  id           Int     @id @default(autoincrement())
+  user_id      Int     @unique
+  first_name   String?
+  last_name    String?
+  motto        String?
+  country      String?
+  city         String?
+  jurusan      String?
+  raport_score Json?
+>>>>>>> main
 
   user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
