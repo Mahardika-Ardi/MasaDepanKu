@@ -8,9 +8,9 @@ const route = express.Router();
 
 /**
  * @swagger
- * /user/getUsers:
+ * /users/getUsers:
  *   get:
- *     summary: Get users with pagination system
+ *     summary: Ambil semua user (pagination)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -19,15 +19,69 @@ const route = express.Router();
  *         name: page
  *         schema:
  *           type: integer
- *           example: 1
+ *           default: 1
+ *         description: Nomor halaman
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
- *           example: 10
+ *           default: 10
+ *         description: Jumlah data per halaman
  *     responses:
  *       200:
- *         description: Success
+ *         description: Berhasil mengambil daftar user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Success:
+ *                   type: boolean
+ *                   example: true
+ *                 Message:
+ *                   type: string
+ *                   example: Successfully Get User Data!
+ *                 Information:
+ *                   type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 1
+ *                           name:
+ *                             type: string
+ *                             example: Budi Santoso
+ *                           email:
+ *                             type: string
+ *                             example: budi@mail.com
+ *                           role:
+ *                             type: string
+ *                             example: USER
+ *                     total:
+ *                       type: integer
+ *                       example: 20
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 2
+ *                 Error:
+ *                   nullable: true
+ *                   example: null
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (hanya ADMIN)
+ *       500:
+ *         description: Gagal mengambil data user
  */
 route.get(
   "/getUsers",
@@ -38,9 +92,9 @@ route.get(
 
 /**
  * @swagger
- * /user/getSpecificUser:
+ * /users/getSpecificUser:
  *   get:
- *     summary: Get specific users with filter systems
+ *     summary: Ambil 1 user berdasarkan filter name/email
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -49,17 +103,50 @@ route.get(
  *         name: name
  *         schema:
  *           type: string
- *           example: example
+ *         description: Filter berdasarkan nama
  *       - in: query
  *         name: email
  *         schema:
  *           type: string
- *           example: example@gmail.com
+ *         description: Filter berdasarkan email
  *     responses:
  *       200:
- *         description: Success
- *       404:
- *         description: User not found
+ *         description: Berhasil mengambil user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Success:
+ *                   type: boolean
+ *                   example: true
+ *                 Message:
+ *                   type: string
+ *                   example: Successfully Get User Data!
+ *                 Information:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: Budi Santoso
+ *                     email:
+ *                       type: string
+ *                       example: budi@mail.com
+ *                     role:
+ *                       type: string
+ *                       example: USER
+ *                 Error:
+ *                   nullable: true
+ *                   example: null
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Gagal mengambil data user
  */
 route.get(
   "/getSpecificUser",
@@ -70,12 +157,19 @@ route.get(
 
 /**
  * @swagger
- * /user/updateUsers:
+ * /users/updateUsers:
  *   patch:
- *     summary: Update user data from aplication
+ *     summary: Update data user berdasarkan path id
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID target
  *     requestBody:
  *       required: true
  *       content:
@@ -90,33 +184,59 @@ route.get(
  *                 type: string
  *                 example: john@email.com
  *     responses:
- *       200:
- *         description: User updated successfully
- *       404:
- *         description: User not found
+ *       201:
+ *         description: User berhasil diupdate
+ *       400:
+ *         description: ID path tidak valid
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Gagal update user
  */
-
 route.patch(
   "/updateUsers",
   verifyMiddleware,
   ownerShipCheck,
-  roleCheck("ADMIN", "USER"),
+  roleCheck("USER"),
   UserController.update,
 );
 
 /**
  * @swagger
- * /user/deleteUser:
+ * /users/deleteUser:
  *   delete:
- *     summary: Delete users data from application
+ *     summary: Hapus akun user login (tanpa path id)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       200:
- *         description: User deleted successfully
- *       404:
- *         description: User not found
+ *       201:
+ *         description: User berhasil dihapus
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Success:
+ *                   type: boolean
+ *                   example: true
+ *                 Message:
+ *                   type: string
+ *                   example: Register successfully
+ *                 Information:
+ *                   nullable: true
+ *                   example: null
+ *                 Error:
+ *                   nullable: true
+ *                   example: null
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Gagal menghapus user
  */
 route.delete(
   "/deleteUser",
