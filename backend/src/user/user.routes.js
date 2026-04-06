@@ -157,9 +157,9 @@ route.get(
 
 /**
  * @swagger
- * /users/updateUsers/{id}:
+ * /users/updateUsers:
  *   patch:
- *     summary: Update data user berdasarkan path id (umumnya untuk ADMIN)
+ *     summary: Update data user berdasarkan path id
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -199,7 +199,7 @@ route.patch(
   "/updateUsers",
   verifyMiddleware,
   ownerShipCheck,
-  roleCheck("ADMIN", "USER"),
+  roleCheck("USER"),
   UserController.update,
 );
 
