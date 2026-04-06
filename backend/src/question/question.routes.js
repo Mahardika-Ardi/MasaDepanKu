@@ -10,16 +10,8 @@ const route = express.Router();
  *   post:
  *     summary: Creating question using AI
  *     tags: [Question]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               user_id:
- *                 type: number
- *                 example: 1
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Success

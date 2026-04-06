@@ -1,5 +1,7 @@
 import { generateText } from "../client/gemini.client.js";
+import { analysisPrompt } from "../prompts/analysis.prompt.js";
 import { buildQuestionPrompt } from "../prompts/question.prompt.js";
+import { careerAnalysisSchemas } from "../schemas/career_analysis.schemas.js";
 import { QuestionPayloadSchema } from "../schemas/question_result.schemas.js";
 
 function normalizeText(rawText) {
@@ -13,17 +15,25 @@ function normalizeText(rawText) {
   return cleaned;
 }
 class AiService {
-  async GenerateQuestion(totalQuestions = 20) {
-    const prompt = buildQuestionPrompt(totalQuestions);
-    const raw = await generateText(prompt, {
-      temperature: 0.6,
-    });
+  async GenerateQuestion() {
+    const prompt = buildQuestionPrompt();
+    const raw = await generateText(prompt, { temperature: 0.6 });
 
     const normal = normalizeText(raw);
     const json = JSON.parse(normal);
     const parsed = QuestionPayloadSchema.parse(json);
-
     return parsed;
+  }
+
+  async AnalysisData(score, question, answer, jurusan) {
+    const prompt = analysisPrompt(score, question, answer, jurusan);
+    const raw = await generateText(prompt, { temperature: 0.7 });
+
+    const cleanedText = normalizeText(raw);
+    const parsed = JSON.parse(cleanedText);
+    const validated = careerAnalysisSchemas.parse(parsed);
+
+    return validated;
   }
 }
 

@@ -6,10 +6,12 @@
     "frontend"
   ],
   "scripts": {
-    "dev": "concurrently -n BACKEND,FRONTEND -c green,blue \"npm run start:dev -w backend\" \"npm run dev -w frontend\"",
-    "lint": "",
     "start:be": "cd backend && npm run start:dev",
-    "start:fe": "cd frontend && npm run dev"
+    "start:fe": "cd frontend && npm run dev",
+    "dev": "concurrently -n BACKEND,FRONTEND -c green,blue \"npm run start:dev -w backend\" \"npm run dev -w frontend\"",
+    "lint:be": "npm --prefix backend run lint",
+    "lint:fe": "npm --prefix frontend run lint",
+    "lint": "npm run lint:be && npm run lint:fe"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

@@ -1,4 +1,4 @@
-import { Prisma } from "../../generated/prisma/client.js";
+import { Prisma } from "../../generated/prisma/client.ts";
 
 function prismaErrors(error) {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {

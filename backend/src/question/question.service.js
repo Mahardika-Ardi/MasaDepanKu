@@ -3,40 +3,35 @@ import prismaErrors from "../utils/prisma_errors.utils.js";
 import AiService from "../ai/service/ai.service.js";
 
 class QuestionService {
-  async create(data) {
+  async create(id) {
     try {
-      const generatedQuestion = await AiService.GenerateQuestion(
-        data.total_questions,
-      );
+      const generatedQuestion = await AiService.GenerateQuestion();
 
-      const result = await prisma.$transaction(async (tx) => {
-        const addGroupQuestion = await tx.groupQuestion.create({
-          data: { user_id: data.user_id },
-        });
-        const payload = generatedQuestion.map((item) => ({
-          ...item,
-          group_id: addGroupQuestion.id,
-        }));
-
-        await tx.question.createMany({
-          data: payload,
-        });
-
-        const question = await tx.question.findMany({
-          where: { group_id: addGroupQuestion.id },
-          orderBy: { number: "asc" },
-        });
-
-        return {
-          generated_by: addGroupQuestion.user_id,
-          group_question_id: addGroupQuestion.id,
-          question,
-        };
+      const result = await prisma.testSession.create({
+        data: {
+          userId: id,
+          status: "PENDING",
+          question: {
+            createMany: {
+              data: generatedQuestion.map((item) => ({
+                number: item.number,
+                category: item.category,
+                question: item.question,
+                answer: item.answer,
+              })),
+            },
+          },
+        },
+        include: {
+          question: {
+            orderBy: { number: "asc" },
+          },
+        },
       });
 
       if (!result) {
         throw {
-          message: "Failed generating question, error!",
+          message: "Failed generating question!",
           code: "BAD_REQUEST",
         };
       }

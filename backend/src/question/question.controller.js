@@ -1,14 +1,9 @@
-import { QuestionCreateDto } from "./dto/question_create.dto.js";
 import QuestionService from "./question.service.js";
 
 class QuestionController {
   async create(req, res) {
     try {
-      const validated = QuestionCreateDto.parse({
-        user_id: req.user.id,
-        total_questions: req.body?.total_questions,
-      });
-      const result = await QuestionService.create(validated);
+      const result = await QuestionService.create(req.user.id);
 
       res.status(200).json({
         Success: true,

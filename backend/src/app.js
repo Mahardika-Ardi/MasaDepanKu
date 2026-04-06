@@ -9,32 +9,17 @@ import RoutesLoader from "./bootstrap/route.bootstrap.js";
 export function CreateApp() {
   const app = express();
 
-  const allowedOrigins = [process.env.FRONTEND_URL].filter(Boolean);
-
   app.use(
     cors({
-      origin(origin, callback) {
-        if (!origin) {
-          return callback(null, true);
-        }
-
-        const isAllowedOrigin = allowedOrigins.includes(origin);
-        const isLocalhostDev = /^http:\/\/localhost:\d+$/.test(origin);
-
-        if (isAllowedOrigin || isLocalhostDev) {
-          return callback(null, true);
-        }
-
-        return callback(new Error("Not allowed by CORS"));
-      },
-      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      origin: process.env.FRONTEND_URL,
+      methods: ["POST", "PUT", "DELETE", "GET"],
       allowedHeaders: ["Content-Type", "Authorization"],
     }),
   );
   app.use(express.json());
   app.use("/api-documentation", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
-  app.get("/", (req, res) => res.send("Hello World!"));
+  app.get("/", (req, res) => res.send("Hello World!!"));
   RoutesLoader(app);
 
   app.use(errorHandler);

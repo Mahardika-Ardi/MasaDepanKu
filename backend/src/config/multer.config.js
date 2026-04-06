@@ -1,15 +1,30 @@
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "./cloudinary.config.js";
+import { v7 as uuidV7 } from "uuid";
 import multer from "multer";
 import path from "path";
-import { v7 as uuidV7 } from "uuid";
-import fs from "fs";
-import { fileURLToPath } from "url";
 
-const currentfile = fileURLToPath(import.meta.url);
-const currentdir = path.dirname(currentfile);
-const uploadDir = path.join(currentdir, "../uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
+const uploadDir = path.join(process.cwd(), "uploads");
+
+const imageStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "masadepanku/images",
+    allowed_formats: ["jpeg", "png", "jpg", "webp", "gif"],
+    resource_type: "image",
+  },
+});
+
+const mixedStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  // eslint-disable-next-line no-unused-vars
+  params: async (req, file) => {
+    return {
+      folder: "masadepanku/documents",
+      resource_type: "auto",
+    };
+  },
+});
 
 const storage = multer.diskStorage({
   destination: (req, file, callbak) => {
@@ -18,7 +33,7 @@ const storage = multer.diskStorage({
 
   filename: (req, file, callbak) => {
     const ext = path.extname(file.originalname);
-    callbak(null, uuidV7 + ext);
+    callbak(null, `${uuidV7()}${ext}`);
   },
 });
 
@@ -65,6 +80,22 @@ export const multerConfig = multer({
 
 export const multersConfig = multer({
   storage,
+  fileFilter: filesFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+  },
+});
+
+export const multerConfigCloudinaryImage = multer({
+  storage: imageStorage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+  },
+});
+
+export const multersConfigCloudinaryDocument = multer({
+  storage: mixedStorage,
   fileFilter: filesFilter,
   limits: {
     fileSize: 10 * 1024 * 1024,

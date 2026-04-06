@@ -1,22 +1,16 @@
 import { z } from "zod";
 
-const optionalText = z.preprocess(
-  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
-  z.string().min(1).optional(),
-);
+const raport = z.object({
+  BI: z.number(),
+  MTK: z.number(),
+  Bing: z.number(),
+});
 
 export const ProfileUpdateDto = z.object({
-  first_name: optionalText,
-  last_name: optionalText,
-  motto: optionalText,
-  country: optionalText,
-  city: optionalText,
-  scores: z
-    .object({
-      bahasa_indonesia: z.union([z.string(), z.number()]).optional(),
-      bahasa_inggris: z.union([z.string(), z.number()]).optional(),
-      matematika: z.union([z.string(), z.number()]).optional(),
-      konsentrasi_keahlian: z.union([z.string(), z.number()]).optional(),
-    })
-    .optional(),
+  file: z.object({
+    path: z.string().min(1),
+    filename: z.string().min(1),
+  }),
+  jurusan: z.string().nonempty(),
+  raport,
 });

@@ -3,10 +3,10 @@ import UserService from "./user.service.js";
 
 class UserController {
   async findall(req, res) {
-    try {
-      const page = Number(req.query.page) || 1;
-      const limit = Number(req.query.limit) || 10;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
 
+    try {
       const result = await UserService.findall(page, limit);
 
       res.status(200).json({
@@ -52,9 +52,19 @@ class UserController {
     }
   }
   async update(req, res) {
-    const id = Number(req.params.id);
+    const id = req.user.id;
+
     try {
       const validated = UserUpdateDto.parse(req.body);
+
+      if (!validated) {
+        res.status(500).json({
+          Message:
+            "Error -> Data type is not valid or data blak ( undifined / null )",
+          Information: null,
+        });
+      }
+
       const result = await UserService.update(id, validated);
 
       res.status(201).json({
@@ -73,7 +83,8 @@ class UserController {
     }
   }
   async delete(req, res) {
-    const id = Number(req.params.id);
+    const id = req.user.id;
+
     try {
       const result = await UserService.delete(id);
 

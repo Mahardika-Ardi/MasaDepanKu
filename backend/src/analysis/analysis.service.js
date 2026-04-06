@@ -1,51 +1,40 @@
+import AiService from "../ai/service/ai.service.js";
 import prisma from "../config/prisma.config.js";
 import prismaErrors from "../utils/prisma_errors.utils.js";
 
 class AnalysisService {
-  async create(data) {
+  async analysis(id) {
     try {
-      await prisma.users.create();
-      //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
-  }
-  async findall() {
-    try {
-      // await prisma.users.findMany();
-      //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
-  }
-  async findone(id) {
-    try {
-      // await prisma.users.findFirst();
-      //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
-  }
-  async update(id, data) {
-    try {
-      // await prisma.users.update();
-      //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
-  }
-  async delete(id) {
-    try {
-      // await prisma.users.delete();
-      //logic
+      const find = await prisma.testSession.findFirst({
+        where: { userId: id },
+        select: {
+          user: {
+            select: {
+              profilDetail: { select: { raportScore: true, jurusan: true } },
+            },
+          },
+          question: { orderBy: { number: "asc" } },
+          answers: { orderBy: { questionId: "asc" } },
+        },
+      });
+
+      if (!find) {
+        throw {
+          message: "Failed showwing answer!",
+          code: "BAD_REQUEST",
+        };
+      }
+
+      const AiResponse = await AiService.AnalysisData(
+        find.user.profilDetail.raportScore,
+        find.question,
+        find.answers,
+        find.user.profilDetail.jurusan,
+      );
+
+      console.log(AiResponse);
+
+      return AiResponse;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);

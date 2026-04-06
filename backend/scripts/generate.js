@@ -20,7 +20,6 @@ const createFile = (filePath, content) => {
 
   fs.writeFileSync(filePath, content);
   console.log(chalk.green("Created: "), chalk.hex("#00D4FF")(`${filePath}`));
-  console.log(chalk.green("Done!"));
 };
 
 fs.mkdirSync(basePath, { recursive: true });
@@ -29,19 +28,19 @@ fs.mkdirSync(path.join(basePath, "dto"), { recursive: true });
 createFile(
   path.join(basePath, "dto", `${baseName}_create.dto.js`),
   `import { z } from "zod";
-
-export const ${capitalize(baseName)}CreateDto = z.object({
-  // define schema here
-});
-`,
+  
+  export const ${capitalize(baseName)}CreateDto = z.object({
+    // define schema here
+    });
+    `,
 );
 createFile(
   path.join(basePath, "dto", `${baseName}_update.dto.js`),
   `import { z } from "zod";
-
-export const ${capitalize(baseName)}UpdateDto = z.object({
-  // define schema here
-});
+  
+  export const ${capitalize(baseName)}UpdateDto = z.object({
+    // define schema here
+    });
 `,
 );
 
@@ -56,163 +55,163 @@ createFile(
       try {
         const validated = ${capitalize(baseName)}CreateDto.parse(req.body);
         const result = await ${capitalize(baseName)}Service.register(validated);
-  
+        
         res.status(200).json({
           Success: true,
           Message: "",
           Information: result,
           Error: null,
-        });
+          });
+          } catch (error) {
+            res.status(500).json({
+              Success: false,
+          Message: "Error ->",
+          Information: null,
+          Error: error.code || "BAD_REQUEST",
+          });
+          }
+          }
+          async findall(req, res) {
+            try {
+              const result = await ${capitalize(baseName)}Service.register(req.body);
+              
+              res.status(200).json({
+                Success: true,
+                Message: "",
+                Information: result,
+                Error: null,
+                });
       } catch (error) {
         res.status(500).json({
           Success: false,
           Message: "Error ->",
           Information: null,
           Error: error.code || "BAD_REQUEST",
-        });
-      }
-    }
-    async findall(req, res) {
+          });
+          }
+          }
+          async findone(req, res) {
       try {
         const result = await ${capitalize(baseName)}Service.register(req.body);
-  
+        
         res.status(200).json({
           Success: true,
           Message: "",
           Information: result,
           Error: null,
-        });
-      } catch (error) {
+          });
+          } catch (error) {
+            res.status(500).json({
+              Success: false,
+              Message: "Error ->",
+              Information: null,
+              Error: error.code || "BAD_REQUEST",
+              });
+              }
+              }
+              async update(req, res) {
+                try {
+                  const validated = ${capitalize(baseName)}UpdateDto.parse(req.body);
+                  const result = await ${capitalize(baseName)}Service.register(validated);
+                  
+                  res.status(200).json({
+                    Success: true,
+                    Message: "",
+                    Information: result,
+                    Error: null,
+                    });
+                    } catch (error) {
         res.status(500).json({
           Success: false,
           Message: "Error ->",
           Information: null,
           Error: error.code || "BAD_REQUEST",
-        });
-      }
-    }
-    async findone(req, res) {
-      try {
-        const result = await ${capitalize(baseName)}Service.register(req.body);
-  
-        res.status(200).json({
-          Success: true,
-          Message: "",
-          Information: result,
+          });
+          }
+          }
+          async delete(req, res) {
+            try {
+              const result = await ${capitalize(baseName)}Service.register(req.body);
+              
+              res.status(200).json({
+                Success: true,
+                Message: "",
+                Information: result,
           Error: null,
         });
-      } catch (error) {
-        res.status(500).json({
-          Success: false,
-          Message: "Error ->",
+        } catch (error) {
+          res.status(500).json({
+            Success: false,
+            Message: "Error ->",
           Information: null,
           Error: error.code || "BAD_REQUEST",
-        });
-      }
-    }
-    async update(req, res) {
-      try {
-        const validated = ${capitalize(baseName)}UpdateDto.parse(req.body);
-        const result = await ${capitalize(baseName)}Service.register(validated);
-  
-        res.status(200).json({
-          Success: true,
-          Message: "",
-          Information: result,
-          Error: null,
-        });
-      } catch (error) {
-        res.status(500).json({
-          Success: false,
-          Message: "Error ->",
-          Information: null,
-          Error: error.code || "BAD_REQUEST",
-        });
-      }
-    }
-    async delete(req, res) {
-      try {
-        const result = await ${capitalize(baseName)}Service.register(req.body);
-  
-        res.status(200).json({
-          Success: true,
-          Message: "",
-          Information: result,
-          Error: null,
-        });
-      } catch (error) {
-        res.status(500).json({
-          Success: false,
-          Message: "Error ->",
-          Information: null,
-          Error: error.code || "BAD_REQUEST",
-        });
-      }
-    }
-  }
-  
-  export default new ${capitalize(baseName)}Controller();
-`,
+          });
+          }
+          }
+          }
+          
+          export default new ${capitalize(baseName)}Controller();
+          `,
 );
 
 createFile(
   path.join(basePath, `${baseName}.service.js`),
   `import prisma from "../config/prisma.config.js";
-import prismaErrors from "../utils/prisma_errors.utils.js";
-
-class ${capitalize(baseName)}Service {
-  async create(data) {
+  import prismaErrors from "../utils/prisma_errors.utils.js";
+  
+  class ${capitalize(baseName)}Service {
+    async create(data) {
     try {
       await prisma.users.create();
       //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
-  }
-  async findall() {
-    try {
-      // await prisma.users.findMany();
-      //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
-  }
-  async findone(id) {
-    try {
-      // await prisma.users.findFirst();
-      //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
-  }
-  async update(id, data) {
-    try {
-      // await prisma.users.update();
-      //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
+      } catch (error) {
+        const prismaError = prismaErrors(error);
+        console.log(error);
+        throw error || prismaError;
+        }
+        }
+        async findall() {
+          try {
+            // await prisma.users.findMany();
+            //logic
+            } catch (error) {
+              const prismaError = prismaErrors(error);
+              console.log(error);
+              throw error || prismaError;
+              }
+              }
+              async findone(id) {
+                try {
+                  // await prisma.users.findFirst();
+                  //logic
+                  } catch (error) {
+                    const prismaError = prismaErrors(error);
+                    console.log(error);
+                    throw error || prismaError;
+                    }
+                    }
+                    async update(id, data) {
+                      try {
+                        // await prisma.users.update();
+                        //logic
+                        } catch (error) {
+                          const prismaError = prismaErrors(error);
+                          console.log(error);
+                          throw error || prismaError;
+                          }
   }
   async delete(id) {
     try {
       // await prisma.users.delete();
       //logic
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw error || prismaError;
-    }
+      } catch (error) {
+        const prismaError = prismaErrors(error);
+        console.log(error);
+        throw error || prismaError;
+        }
   }
-}
-
+  }
+  
 export default new ${capitalize(baseName)}Service();
 `,
 );
@@ -232,9 +231,11 @@ createFile(
   
   export default route;
   
-`,
+  `,
 );
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+console.log(chalk.green("Done!"));

@@ -5,11 +5,12 @@ class UserService {
   async findall(page, limit) {
     const skip = (page - 1) * limit;
     try {
-      const [users, total] = await Promise.all([
+      const [users, total] = await prisma.$transaction([
         prisma.users.findMany({
           take: limit,
           skip: skip,
           orderBy: { id: "asc" },
+          select: { id: true, name: true, email: true, role: true },
         }),
         prisma.users.count(),
       ]);
@@ -21,21 +22,12 @@ class UserService {
         };
       }
 
-      const userSafe = users.map((x) => {
-        return {
-          id: x.id,
-          name: x.name,
-          email: x.email,
-          role: x.role,
-        };
-      });
-
       return {
-        data: userSafe,
         total,
         page,
         limit,
         totalPages: Math.ceil(total / limit),
+        data: users,
       };
     } catch (error) {
       const prismaError = prismaErrors(error);
@@ -45,7 +37,10 @@ class UserService {
   }
   async findone(where) {
     try {
-      const find = await prisma.users.findFirst({ where });
+      const find = await prisma.users.findFirst({
+        where,
+        select: { id: true, name: true, email: true, role: true },
+      });
 
       if (!find) {
         throw {
@@ -54,45 +49,29 @@ class UserService {
         };
       }
 
-      return {
-        id: find.id,
-        name: find.name,
-        email: find.email,
-        role: find.role,
-      };
+      return find;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-
       throw error || prismaError;
     }
   }
   async update(id, data) {
     try {
-      const updt = await prisma.users.update({ where: { id }, data });
+      const updt = await prisma.users.update({
+        where: { id },
+        data,
+        select: { id: true, name: true, email: true, role: true },
+      });
 
       if (!updt) {
-        throw new Error({
-          message: "Failed Updating Users Data!",
-          code: "BAD_REQUEST",
-        });
-      }
-
-      const find = await prisma.users.findFirst({ where: { id } });
-
-      if (!find) {
         throw {
-          message: "Failed Creating Users!",
+          message: "Failed Updating Users Data!",
           code: "BAD_REQUEST",
         };
       }
 
-      return {
-        id: find.id,
-        name: find.name,
-        email: find.email,
-        role: find.role,
-      };
+      return updt;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
@@ -101,24 +80,7 @@ class UserService {
   }
   async delete(id) {
     try {
-      const findGroupQuestion = await prisma.groupQuestion.findFirst({
-        where: { user_id: id },
-      });
-
-      if (!findGroupQuestion) {
-        throw {
-          message: "Failed Finding User!",
-          code: "BAD_REQUEST",
-        };
-      }
-
-      const delt = await prisma.$transaction([
-        prisma.profilDetail.delete({ where: { user_id: id } }),
-        prisma.photoProfile.delete({ where: { user_id: id } }),
-        prisma.groupQuestion.delete({ where: { user_id: id } }),
-        prisma.question.delete({ where: { group_id: findGroupQuestion.id } }),
-        prisma.users.delete({ where: { id } }),
-      ]);
+      const delt = await prisma.users.delete({ where: { id } });
 
       if (!delt) {
         throw {

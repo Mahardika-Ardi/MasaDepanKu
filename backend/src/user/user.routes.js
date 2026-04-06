@@ -2,7 +2,7 @@ import express from "express";
 import UserController from "./user.controller.js";
 import verifyMiddleware from "../middlewares/auth.middleware.js";
 import roleCheck from "../middlewares/role.middleware.js";
-import ownerShipCheck from "../middlewares/ownershipe_check.middleware.js";
+import ownerShipCheck from "../middlewares/ownership_check.middleware.js";
 
 const route = express.Router();
 
@@ -12,6 +12,8 @@ const route = express.Router();
  *   get:
  *     summary: Get users with pagination system
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
@@ -40,6 +42,8 @@ route.get(
  *   get:
  *     summary: Get specific users with filter systems
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: name
@@ -54,6 +58,8 @@ route.get(
  *     responses:
  *       200:
  *         description: Success
+ *       404:
+ *         description: User not found
  */
 route.get(
   "/getSpecificUser",
@@ -64,17 +70,12 @@ route.get(
 
 /**
  * @swagger
- * /user/updateUsers/{id}:
+ * /user/updateUsers:
  *   patch:
  *     summary: Update user data from aplication
  *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: User ID
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -96,26 +97,21 @@ route.get(
  */
 
 route.patch(
-  "/updateUsers/:id",
+  "/updateUsers",
   verifyMiddleware,
-  roleCheck("ADMIN", "USER"),
   ownerShipCheck,
+  roleCheck("ADMIN", "USER"),
   UserController.update,
 );
 
 /**
  * @swagger
- * /user/deleteUser/{id}:
+ * /user/deleteUser:
  *   delete:
  *     summary: Delete users data from application
  *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: User ID
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: User deleted successfully
@@ -123,10 +119,10 @@ route.patch(
  *         description: User not found
  */
 route.delete(
-  "/deleteUser/:id",
+  "/deleteUser",
   verifyMiddleware,
-  roleCheck("ADMIN", "USER"),
   ownerShipCheck,
+  roleCheck("ADMIN", "USER"),
   UserController.delete,
 );
 
