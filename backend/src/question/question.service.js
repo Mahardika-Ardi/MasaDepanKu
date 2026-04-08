@@ -1,6 +1,7 @@
 import prisma from "../config/prisma.config.js";
 import prismaErrors from "../utils/prisma_errors.utils.js";
 import AiService from "../ai/service/ai.service.js";
+import { createError } from "../utils/http_error.utils.js";
 
 class QuestionService {
   async create(id) {
@@ -30,17 +31,14 @@ class QuestionService {
       });
 
       if (!result) {
-        throw {
-          message: "Failed generating question!",
-          code: "BAD_REQUEST",
-        };
+        throw createError("Failed generating question", "BAD_REQUEST");
       }
 
       return result;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
 }

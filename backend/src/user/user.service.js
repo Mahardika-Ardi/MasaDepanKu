@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.config.js";
+import { createError } from "../utils/http_error.utils.js";
 import prismaErrors from "../utils/prisma_errors.utils.js";
 
 class UserService {
@@ -16,9 +17,12 @@ class UserService {
       ]);
 
       if (!users || users.length === 0) {
-        throw {
-          message: "Failed Getting All User!",
-          code: "BAD_REQUEST",
+        return {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+          data: [],
         };
       }
 
@@ -32,7 +36,7 @@ class UserService {
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
   async findone(where) {
@@ -43,17 +47,14 @@ class UserService {
       });
 
       if (!find) {
-        throw {
-          message: "Failed Getting User!",
-          code: "BAD_REQUEST",
-        };
+        throw createError("Failed showwing user data!", "NOT_FOUND");
       }
 
       return find;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
   async update(id, data) {
@@ -65,17 +66,14 @@ class UserService {
       });
 
       if (!updt) {
-        throw {
-          message: "Failed Updating Users Data!",
-          code: "BAD_REQUEST",
-        };
+        throw createError("Failed updating user data!", "BAD_REQUEST");
       }
 
       return updt;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
   async delete(id) {
@@ -83,15 +81,12 @@ class UserService {
       const delt = await prisma.users.delete({ where: { id } });
 
       if (!delt) {
-        throw {
-          message: "Failed Deleting User!",
-          code: "BAD_REQUEST",
-        };
+        throw createError("Failed deleting user data!", "BAD_REQUEST");
       }
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
 }

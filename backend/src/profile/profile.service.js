@@ -1,5 +1,6 @@
 import cloudinary from "../config/cloudinary.config.js";
 import prisma from "../config/prisma.config.js";
+import { createError } from "../utils/http_error.utils.js";
 import prismaErrors from "../utils/prisma_errors.utils.js";
 
 class ProfileService {
@@ -14,7 +15,7 @@ class ProfileService {
       });
 
       if (!findProfile) {
-        throw new Error("Failed getting profile!");
+        throw createError("Failed showing profil data", "NOT_FOUND");
       }
 
       return {
@@ -27,7 +28,7 @@ class ProfileService {
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
 
@@ -41,7 +42,7 @@ class ProfileService {
       });
 
       if (!existingPhotoProfile) {
-        throw new Error("Failed updating profil!");
+        throw createError("Failed updating profile", "NOT_FOUND");
       }
 
       const updtusr = await prisma.users.update({
@@ -65,10 +66,7 @@ class ProfileService {
       }
 
       if (!updtusr) {
-        throw {
-          message: "Failed updating profil!",
-          code: "BAD_REQUEST",
-        };
+        throw createError("Failed updating profile", "BAD_REQUEST");
       }
 
       return {
@@ -81,7 +79,7 @@ class ProfileService {
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
 }
