@@ -1,11 +1,10 @@
+import { sendError } from "../utils/http_error.utils.js";
 import AnalysisService from "./analysis.service.js";
 
 class AnalysisController {
   async analysis(req, res) {
     try {
       const result = await AnalysisService.analysis(req.user.id);
-      console.log(result);
-      
 
       res.status(200).json({
         Success: true,
@@ -14,12 +13,7 @@ class AnalysisController {
         Error: null,
       });
     } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error ->",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "Failed to analyze user answers");
     }
   }
 }

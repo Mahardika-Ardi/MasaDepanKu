@@ -1,91 +1,46 @@
 import { Prisma } from "../../generated/prisma/client.ts";
+import { createError } from "./http_error.utils.js";
 
 function prismaErrors(error) {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     switch (error.code) {
       case "P2000":
-        return {
-          message: "Value Too Long!",
-          code: "BAD_REQUEST",
-        };
+        return createError("Value Too Long!", "BAD_REQUEST");
       case "P2001":
-        return {
-          message: "Record Not Found!",
-          code: "NOT_FOUND",
-        };
+        return createError("Record Not Found!", "NOT_FOUND");
       case "P2002":
-        return {
-          message: "Unique Constraint Failed!",
-          code: "CONFLICT",
-        };
+        return createError("Unique Constraint Failed!", "CONFLICT");
       case "P2003":
-        return {
-          message: "Foreign Key Constraint Failed!",
-          code: "CONFLICT",
-        };
+        return createError("Foreign Key Constraint Failed!", "CONFLICT");
       case "P2004":
-        return {
-          message: "Constraint Failed!",
-          code: "FAILED",
-        };
+        return createError("Constraint Failed!", "BAD_REQUEST");
       case "P2011":
-        return {
-          message: "Null Constraint Violation!",
-          code: "UNDEFINED",
-        };
+        return createError("Null Constraint Violation!", "BAD_REQUEST");
       case "P2012":
-        return {
-          message: "Missing Required Value!",
-          code: "MISSING_VALUE",
-        };
+        return createError("Missing Required Value!", "BAD_REQUEST");
       case "P2014":
-        return {
-          message: "Relation Violation!",
-          code: "CONFLICT",
-        };
+        return createError("Relation Violation!", "CONFLICT");
       case "P2015":
-        return {
-          message: "Related Record Not Found!",
-          code: "NOT_FOUND",
-        };
+        return createError("Related Record Not Found!", "NOT_FOUND");
       case "P2017":
-        return {
-          message: "Relation Connect Failed!",
-          code: "RELATION_FAILED",
-        };
+        return createError("Relation Connect Failed!", "BAD_REQUEST");
       case "P2020":
-        return {
-          message: "Value Out Of Range!",
-          code: "OUT_OF_RANGE",
-        };
+        return createError("Value Out Of Range!", "BAD_REQUEST");
       case "P2021":
-        return {
-          message: "Table Does Not Exist!",
-          code: "NOT_FOUND",
-        };
+        return createError("Table Does Not Exist!", "NOT_FOUND");
       case "P2022":
-        return {
-          message: "Column Does Not Exist!",
-          code: "NOT_FOUND",
-        };
+        return createError("Column Does Not Exist!", "NOT_FOUND");
       case "P2024":
-        return {
-          message: "Connection Pool Timeout!",
-          code: "CONNECTION_TIMEOUT",
-        };
+        return createError("Connection Pool Timeout!", "CONNECTION_TIMEOUT");
       case "P2025":
-        return {
-          message: "Record Not Found!",
-          code: "NOT_FOUND",
-        };
+        return createError("Record Not Found!", "NOT_FOUND");
 
       default:
-        return {
-          message: "Database Error",
-          code: "INTERNAL_SERVER_ERROR",
-        };
+        return createError("Database Error", "INTERNAL_SERVER_ERROR");
     }
   }
+
+  return null;
 }
 
 export default prismaErrors;

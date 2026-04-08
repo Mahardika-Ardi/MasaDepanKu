@@ -1,3 +1,4 @@
+import { sendError } from "../utils/http_error.utils.js";
 import TestsessionService from "./testsession.service.js";
 
 class TestsessionController {
@@ -12,12 +13,7 @@ class TestsessionController {
         Error: null,
       });
     } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error -> Failed showing session",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "Failed showing session");
     }
   }
   async finish(req, res) {
@@ -31,12 +27,7 @@ class TestsessionController {
         Error: null,
       });
     } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error -> Failed finishing test session",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "Failed finishing test session");
     }
   }
   async cancel(req, res) {
@@ -50,12 +41,7 @@ class TestsessionController {
         Error: null,
       });
     } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error -> Failed canceling test session",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "Failed canceling test session");
     }
   }
 }

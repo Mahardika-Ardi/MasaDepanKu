@@ -1,6 +1,7 @@
 import { ProfileUpdateDto } from "./dto/profile_update.dto.js";
 import ProfileService from "./profile.service.js";
 import cloudinary from "../config/cloudinary.config.js";
+import { sendError } from "../utils/http_error.utils.js";
 
 class ProfileController {
   async findone(req, res) {
@@ -14,12 +15,7 @@ class ProfileController {
         Error: null,
       });
     } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error -> Failed to get profile",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "Failed showing user profile");
     }
   }
 
@@ -35,15 +31,6 @@ class ProfileController {
       };
 
       const validated = ProfileUpdateDto.parse(data);
-
-      if (!validated) {
-        return res.status(500).json({
-          Message:
-            "Error -> Data type is not valid or data blank ( undifined / null )",
-          Information: null,
-        });
-      }
-
       const result = await ProfileService.update(req.user.id, validated);
 
       res.status(200).json({
@@ -57,12 +44,7 @@ class ProfileController {
         await cloudinary.uploader.destroy(req.file.filename);
       }
 
-      res.status(500).json({
-        Success: false,
-        Message: "Error -> Failed to updating profile",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "Failed updating user profile");
     }
   }
 }

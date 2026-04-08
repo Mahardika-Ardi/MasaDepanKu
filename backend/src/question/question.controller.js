@@ -1,3 +1,4 @@
+import { sendError } from "../utils/http_error.utils.js";
 import QuestionService from "./question.service.js";
 
 class QuestionController {
@@ -12,12 +13,7 @@ class QuestionController {
         Error: null,
       });
     } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error -> Failed to generating questions",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "Failed generating question");
     }
   }
 }

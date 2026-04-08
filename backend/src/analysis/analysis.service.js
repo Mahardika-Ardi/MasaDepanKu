@@ -1,5 +1,6 @@
 import AiService from "../ai/service/ai.service.js";
 import prisma from "../config/prisma.config.js";
+import { createError } from "../utils/http_error.utils.js";
 import prismaErrors from "../utils/prisma_errors.utils.js";
 
 class AnalysisService {
@@ -19,10 +20,7 @@ class AnalysisService {
       });
 
       if (!find) {
-        throw {
-          message: "Failed showwing answer!",
-          code: "BAD_REQUEST",
-        };
+        throw createError("Failed showing answer!", "NOT_FOUND");
       }
 
       const AiResponse = await AiService.AnalysisData(
@@ -32,13 +30,11 @@ class AnalysisService {
         find.user.profilDetail.jurusan,
       );
 
-      console.log(AiResponse);
-
       return AiResponse;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
 }

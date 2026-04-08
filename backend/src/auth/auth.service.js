@@ -1,6 +1,7 @@
 import prisma from "../config/prisma.config.js";
 import { comparePassword, hashPassword } from "../utils/bcrypt.utils.js";
 import { createToken } from "../utils/generate_token.utils.js";
+import { createError } from "../utils/http_error.utils.js";
 import prismaErrors from "../utils/prisma_errors.utils.js";
 
 class AuthService {
@@ -20,17 +21,14 @@ class AuthService {
       });
 
       if (!add) {
-        throw {
-          message: "Failed Creating Users!",
-          code: "BAD_REQUEST",
-        };
+        throw createError("Register Failed", "BAD_REQUEST");
       }
 
       return add;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
 
@@ -41,19 +39,13 @@ class AuthService {
       });
 
       if (!find) {
-        throw new Error({
-          message: "LogIn failed invalid credential, try again!",
-          code: "BAD_REQUEST",
-        });
+        throw createError("LogIn failed invalid credential", "NOT_FOUND");
       }
 
       const compare = await comparePassword(data.password, find.password);
 
       if (!compare) {
-        throw {
-          message: "LogIn failed invalid credential, try again!",
-          code: "BAD_REQUEST",
-        };
+        throw createError("LogIn failed invalid credential", "UNAUTHORIZED");
       }
 
       const payload = {
@@ -74,7 +66,7 @@ class AuthService {
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
 }

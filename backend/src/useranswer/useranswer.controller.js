@@ -1,3 +1,4 @@
+import { sendError } from "../utils/http_error.utils.js";
 import { UseranswerCreateDto } from "./dto/useranswer_create.dto.js";
 import UseranswerService from "./useranswer.service.js";
 
@@ -14,12 +15,7 @@ class UseranswerController {
         Error: null,
       });
     } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error -> failed answering question",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "Failed submitting answer");
     }
   }
 
@@ -34,12 +30,7 @@ class UseranswerController {
         Error: null,
       });
     } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error -> failed showing question",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "Failed showing answer");
     }
   }
 }

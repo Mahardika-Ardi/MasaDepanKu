@@ -1,3 +1,4 @@
+import { sendError } from "../utils/http_error.utils.js";
 import { UserUpdateDto } from "./dto/user_update.dto.js";
 import UserService from "./user.service.js";
 
@@ -16,12 +17,7 @@ class UserController {
         Error: null,
       });
     } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error -> Failed to Get User Data!",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "Failed to get user data");
     }
   }
   async findone(req, res) {
@@ -43,12 +39,7 @@ class UserController {
         Error: null,
       });
     } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error -> Failed to Get User Data!",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "Failed to get user data");
     }
   }
   async update(req, res) {
@@ -56,30 +47,16 @@ class UserController {
 
     try {
       const validated = UserUpdateDto.parse(req.body);
-
-      if (!validated) {
-        res.status(500).json({
-          Message:
-            "Error -> Data type is not valid or data blak ( undifined / null )",
-          Information: null,
-        });
-      }
-
       const result = await UserService.update(id, validated);
 
       res.status(201).json({
         Success: true,
-        Message: "Register successfully",
+        Message: "Successfully updating user data!",
         Information: result,
         Error: null,
       });
     } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error -> Failed to Get User Data!",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "Failed updating data");
     }
   }
   async delete(req, res) {
@@ -90,17 +67,12 @@ class UserController {
 
       res.status(201).json({
         Success: true,
-        Message: "Register successfully",
+        Message: "Seccussfully deleting account",
         Information: result,
         Error: null,
       });
     } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error -> Failed to Register Users",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "Failed deleting account");
     }
   }
 }

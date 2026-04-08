@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.config.js";
+import { createError } from "../utils/http_error.utils.js";
 import prismaErrors from "../utils/prisma_errors.utils.js";
 
 class UseranswerService {
@@ -23,17 +24,14 @@ class UseranswerService {
       });
 
       if (!saveAnswer) {
-        throw {
-          message: "Failed saving question answer!",
-          code: "BAD_REQUEST",
-        };
+        throw createError("Failed saving answer", "BAD_REQUEST");
       }
 
       return saveAnswer;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
 
@@ -55,17 +53,14 @@ class UseranswerService {
       });
 
       if (!showAllAnswer) {
-        throw {
-          message: "Failed showwing answer!",
-          code: "BAD_REQUEST",
-        };
+        throw createError("Failed showing answer!", "NOT_FOUND");
       }
 
       return showAllAnswer;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
 }

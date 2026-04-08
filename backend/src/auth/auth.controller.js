@@ -1,20 +1,12 @@
 import { AuthDto } from "./dto/auth.dto.js";
 import AuthService from "./auth.service.js";
 import { UserCreateDto } from "../user/dto/user_create.dto.js";
+import { sendError } from "../utils/http_error.utils.js";
 
 class AuthController {
   async register(req, res) {
     try {
       const validated = UserCreateDto.parse(req.body);
-
-      if (!validated) {
-        res.status(500).json({
-          Message:
-            "Error -> Data type is not valid or data blak ( undifined / null )",
-          Information: null,
-        });
-      }
-
       const result = await AuthService.register(validated);
 
       res.status(201).json({
@@ -24,27 +16,13 @@ class AuthController {
         Error: null,
       });
     } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error -> Failed to Register Users",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "Failed creating user");
     }
   }
 
   async login(req, res) {
     try {
       const validated = AuthDto.parse(req.body);
-
-      if (!validated) {
-        res.status(500).json({
-          Message:
-            "Error -> Data type is not valid or data blak ( undifined / null )",
-          Information: null,
-        });
-      }
-
       const result = await AuthService.login(validated);
 
       res.status(200).json({
@@ -54,12 +32,7 @@ class AuthController {
         Error: null,
       });
     } catch (error) {
-      res.status(500).json({
-        Success: false,
-        Message: "Error -> LogIn Failed!",
-        Information: null,
-        Error: error.code || "BAD_REQUEST",
-      });
+      return sendError(res, error, "LogIn Failed!");
     }
   }
 }

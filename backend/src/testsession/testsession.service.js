@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.config.js";
+import { createError } from "../utils/http_error.utils.js";
 import prismaErrors from "../utils/prisma_errors.utils.js";
 
 class TestsessionService {
@@ -22,7 +23,7 @@ class TestsessionService {
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
 
@@ -30,21 +31,18 @@ class TestsessionService {
     try {
       const finishSession = await prisma.testSession.update({
         where: { userId: id },
-        data: { status: "COMPELETED" },
+        data: { status: "COMPLETED" },
       });
 
       if (!finishSession) {
-        throw {
-          message: "Failed finishing quest test session!",
-          code: "BAD_REQUEST",
-        };
+        throw createError("Failed finishing test session", "BAD_REQUEST");
       }
 
       return finishSession;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
 
@@ -56,17 +54,14 @@ class TestsessionService {
       });
 
       if (!cancelSession) {
-        throw {
-          message: "Failed finishing quest test session!",
-          code: "BAD_REQUEST",
-        };
+        throw createError("Failed canceling test session", "BAD_REQUEST");
       }
 
       return cancelSession;
     } catch (error) {
       const prismaError = prismaErrors(error);
       console.log(error);
-      throw error || prismaError;
+      throw prismaError || error;
     }
   }
 }
