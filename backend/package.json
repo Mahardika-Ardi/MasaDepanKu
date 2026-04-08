@@ -11,7 +11,7 @@
     "start:prod": "npm run prisma:generate && npm run prisma:deploy && npm start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "prisma:generate": "npx prisma generate",
+    "postinstall": "npx prisma generate",
     "prisma:deploy": "npx prisma migrate deploy",
     "make": "node scripts/generate.js"
   },
