@@ -2,37 +2,25 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import profilePhotoFallback from "../assets/profile/photo_profile.png";
 import bannerImage from "../assets/profile/ilustrasi_laptop.png";
+import API_BASE_URL from "../utils/apiBaseUrl";
 
-const API_BASE_URL =
-  (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "");
+const topNav = ["Halaman Utama", "Pekerjaan"];
 
-const topNav = ["Halaman Utama", "Jaringan Saya", "Pekerjaan", "Pesan"];
 const scoreFields = [
-  { key: "bahasa_indonesia", label: "Nilai Mata Pelajaran Bahasa Indonesia" },
-  { key: "bahasa_inggris", label: "Nilai Mata Pelajaran Bahasa Inggris" },
-  { key: "matematika", label: "Nilai Mata Pelajaran Matematika" },
-  { key: "konsentrasi_keahlian", label: "Nilai Mata Pelajaran Konsentrasi Keahlian" },
+  { key: "BI", label: "Bahasa Indonesia" },
+  { key: "MTK", label: "Matematika" },
+  { key: "Bing", label: "Bahasa Inggris" },
 ];
 
-const emptyScores = scoreFields.reduce((accumulator, field) => {
-  accumulator[field.key] = "";
-  return accumulator;
-}, {});
-
 const fallbackProfile = {
-  user: {
-    name: "Salman Falah Taqiyuddin",
-    email: "",
-    role: "USER",
-  },
   photo_path: null,
   profil_detail: {
-    first_name: "Salman",
-    last_name: "Falah Taqiyuddin",
-    motto: "Aspiring Mobile App Developer | Transforming Ideas into Reality with Flutter & Dart",
-    country: "Indonesia",
-    city: "Kota Malang",
-    scores: emptyScores,
+    jurusan: "Belum diisi",
+    raport: {
+      BI: "",
+      MTK: "",
+      Bing: "",
+    },
   },
 };
 
@@ -48,95 +36,25 @@ function safeParseJson(raw) {
   }
 }
 
-function splitName(fullName = "") {
-  const trimmed = fullName.trim();
+function extractApiMessage(payload, fallback) {
+  return payload?.Message || payload?.message || fallback;
+}
 
-  if (!trimmed) {
-    return { first_name: "", last_name: "" };
-  }
-
-  const parts = trimmed.split(/\s+/);
-
-  if (parts.length === 1) {
-    return { first_name: parts[0], last_name: "" };
-  }
-
+function normalizeRaport(raport) {
   return {
-    first_name: parts[0],
-    last_name: parts.slice(1).join(" "),
+    BI: raport?.BI ?? "",
+    MTK: raport?.MTK ?? "",
+    Bing: raport?.Bing ?? "",
   };
 }
 
-function normalizeScores(scores) {
-  return scoreFields.reduce((accumulator, field) => {
-    accumulator[field.key] = scores?.[field.key] ?? "";
-    return accumulator;
-  }, {});
-}
-
-function buildUpdatePayload(formData) {
-  const payload = {};
-
-  for (const key of ["first_name", "last_name", "motto", "country", "city"]) {
-    const value = formData[key]?.trim();
-    if (value) {
-      payload[key] = value;
-    }
-  }
-
-  const scores = {};
-
-  for (const field of scoreFields) {
-    const value = formData.scores?.[field.key];
-    if (value !== "" && value !== null && value !== undefined) {
-      scores[field.key] = Number(value);
-    }
-  }
-
-  if (Object.keys(scores).length > 0) {
-    payload.scores = scores;
-  }
-
-  return payload;
-}
-
-function buildProfileState(payload) {
-  const profile = payload ?? {};
-  const detail = profile.profil_detail ?? {};
-  const nameFromUser = profile.user?.name ?? "";
-  const names = detail.first_name || detail.last_name
-    ? {
-        first_name: detail.first_name ?? "",
-        last_name: detail.last_name ?? "",
-      }
-    : splitName(nameFromUser);
-
+function mapProfile(payload) {
   return {
-    user: {
-      name: nameFromUser || fallbackProfile.user.name,
-      email: profile.user?.email ?? fallbackProfile.user.email,
-      role: profile.user?.role ?? fallbackProfile.user.role,
-    },
-    photo_path: profile.photo_path ?? null,
+    photo_path: payload?.photo_path ?? null,
     profil_detail: {
-      first_name: names.first_name,
-      last_name: names.last_name,
-      motto: detail.motto ?? fallbackProfile.profil_detail.motto,
-      country: detail.country ?? fallbackProfile.profil_detail.country,
-      city: detail.city ?? fallbackProfile.profil_detail.city,
-      scores: normalizeScores(detail.scores ?? detail.raport),
+      jurusan: payload?.profil_detail?.jurusan ?? "Belum diisi",
+      raport: normalizeRaport(payload?.profil_detail?.raport),
     },
-  };
-}
-
-function buildFormState(profile) {
-  return {
-    first_name: profile.profil_detail.first_name ?? "",
-    last_name: profile.profil_detail.last_name ?? "",
-    motto: profile.profil_detail.motto ?? "",
-    country: profile.profil_detail.country ?? "",
-    city: profile.profil_detail.city ?? "",
-    scores: normalizeScores(profile.profil_detail.scores),
   };
 }
 
@@ -145,23 +63,65 @@ function resolveImageSource(photoPath) {
     return profilePhotoFallback;
   }
 
-  if (photoPath.startsWith("http://") || photoPath.startsWith("https://") || photoPath.startsWith("/")) {
+  if (
+    photoPath.startsWith("http://") ||
+    photoPath.startsWith("https://") ||
+    photoPath.startsWith("/")
+  ) {
     return photoPath;
   }
 
   return profilePhotoFallback;
 }
 
+async function fetchProfile(token) {
+  const endpoints = ["/profile/getSpecificProfile", "/profile/getSpecific"];
+  let lastMessage = "Gagal mengambil data profil";
+
+  for (const endpoint of endpoints) {
+    let response;
+
+    try {
+      response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
+
+    const raw = await response.text();
+    const data = safeParseJson(raw);
+
+    if (response.ok && data?.Success) {
+      return data.Information;
+    }
+
+    if (response.status === 401) {
+      throw new Error("Sesi login berakhir. Silakan login ulang.");
+    }
+
+    lastMessage = extractApiMessage(data, lastMessage);
+  }
+
+  throw new Error(lastMessage);
+}
+
 function ProfilePage() {
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+
   const [profile, setProfile] = useState(fallbackProfile);
-  const [form, setForm] = useState(buildFormState(fallbackProfile));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [notice, setNotice] = useState({ text: "", error: false });
 
-  const token = localStorage.getItem("token");
+  const [jurusan, setJurusan] = useState("");
+  const [raport, setRaport] = useState(normalizeRaport(null));
+  const [photoFile, setPhotoFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -171,26 +131,29 @@ function ProfilePage() {
       }
 
       setLoading(true);
+      setNotice({ text: "", error: false });
 
       try {
-        const response = await fetch(`${API_BASE_URL}/profile/getSpecific`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const info = await fetchProfile(token);
+        const mapped = mapProfile(info);
 
-        const raw = await response.text();
-        const data = safeParseJson(raw);
-
-        if (!response.ok || !data?.Success) {
-          throw new Error(data?.Message || "Gagal mengambil data profil");
+        setProfile(mapped);
+        setJurusan(mapped.profil_detail.jurusan === "Belum diisi" ? "" : mapped.profil_detail.jurusan);
+        setRaport(normalizeRaport(mapped.profil_detail.raport));
+      } catch (error) {
+        const fallback = "Gagal mengambil data profil";
+        if (error?.message === "Sesi login berakhir. Silakan login ulang.") {
+          localStorage.removeItem("token");
+          navigate("/login", { replace: true });
+          return;
         }
 
-        const nextProfile = buildProfileState(data.Information);
-        setProfile(nextProfile);
-        setForm(buildFormState(nextProfile));
-      } catch (error) {
-        setNotice({ text: error.message, error: true });
+        const message =
+          error?.message === "Failed to fetch"
+            ? `Tidak bisa terhubung ke server profile. Endpoint aktif: ${API_BASE_URL}/profile/getSpecificProfile`
+            : error?.message || fallback;
+
+        setNotice({ text: message, error: true });
       } finally {
         setLoading(false);
       }
@@ -199,57 +162,53 @@ function ProfilePage() {
     loadProfile();
   }, [navigate, token]);
 
-  const displayName = useMemo(() => {
-    const firstName = profile.profil_detail.first_name?.trim();
-    const lastName = profile.profil_detail.last_name?.trim();
-    const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+  const scoreCards = useMemo(
+    () =>
+      scoreFields.map((field) => ({
+        ...field,
+        value: profile.profil_detail.raport[field.key] || "Belum diisi",
+      })),
+    [profile],
+  );
 
-    return fullName || profile.user.name;
-  }, [profile]);
-
-  const displayLocation = useMemo(() => {
-    const city = profile.profil_detail.city?.trim();
-    const country = profile.profil_detail.country?.trim();
-
-    if (city && country) {
-      return `${city}, ${country}`;
-    }
-
-    return city || country || "Lokasi belum diisi";
-  }, [profile]);
-
-  const scoreCards = useMemo(() => {
-    return scoreFields.map((field) => ({
-      ...field,
-      value: profile.profil_detail.scores?.[field.key] || "Belum diisi",
-    }));
-  }, [profile]);
-
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setForm((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
-  };
-
-  const handleScoreChange = (fieldKey, value) => {
-    setForm((previous) => ({
-      ...previous,
-      scores: {
-        ...previous.scores,
-        [fieldKey]: value,
-      },
-    }));
-  };
+  const profileImage = previewUrl || resolveImageSource(profile.photo_path);
 
   const openEditModal = () => {
     setNotice({ text: "", error: false });
-    setForm(buildFormState(profile));
+    setJurusan(profile.profil_detail.jurusan === "Belum diisi" ? "" : profile.profil_detail.jurusan);
+    setRaport(normalizeRaport(profile.profil_detail.raport));
+    setPhotoFile(null);
+    setPreviewUrl("");
     setIsEditOpen(true);
   };
 
-  const handleSaveProfile = async (event) => {
+  const closeEditModal = () => {
+    setIsEditOpen(false);
+    setPhotoFile(null);
+    setPreviewUrl("");
+  };
+
+  const handleScoreChange = (key, value) => {
+    setRaport((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0] || null;
+    setPhotoFile(file);
+
+    if (!file) {
+      setPreviewUrl("");
+      return;
+    }
+
+    const nextPreview = URL.createObjectURL(file);
+    setPreviewUrl(nextPreview);
+  };
+
+  const handleSave = async (event) => {
     event.preventDefault();
 
     if (!token) {
@@ -257,41 +216,67 @@ function ProfilePage() {
       return;
     }
 
+    if (!photoFile) {
+      setNotice({ text: "Pilih foto profil terlebih dahulu.", error: true });
+      return;
+    }
+
     setSaving(true);
     setNotice({ text: "", error: false });
 
     try {
-      const payload = buildUpdatePayload(form);
+      const payload = new FormData();
+      payload.append("file", photoFile);
+      payload.append("jurusan", jurusan.trim());
+      payload.append(
+        "raport",
+        JSON.stringify({
+          BI: Number(raport.BI || 0),
+          MTK: Number(raport.MTK || 0),
+          Bing: Number(raport.Bing || 0),
+        }),
+      );
 
       const response = await fetch(`${API_BASE_URL}/profile/updateProfile`, {
         method: "PATCH",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
+        body: payload,
       });
 
       const raw = await response.text();
       const data = safeParseJson(raw);
 
-      if (!response.ok || !data?.Success) {
-        throw new Error(data?.Message || "Gagal menyimpan profil");
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login", { replace: true });
+        return;
       }
 
-      const nextProfile = buildProfileState(data.Information);
-      setProfile(nextProfile);
-      setForm(buildFormState(nextProfile));
+      if (!response.ok || !data?.Success) {
+        throw new Error(extractApiMessage(data, "Gagal menyimpan profil"));
+      }
+
+      const mapped = mapProfile(data.Information);
+      setProfile(mapped);
+      setJurusan(mapped.profil_detail.jurusan === "Belum diisi" ? "" : mapped.profil_detail.jurusan);
+      setRaport(normalizeRaport(mapped.profil_detail.raport));
+      setPhotoFile(null);
+      setPreviewUrl("");
       setIsEditOpen(false);
       setNotice({ text: "Profil berhasil diperbarui.", error: false });
     } catch (error) {
-      setNotice({ text: error.message, error: true });
+      const message =
+        error?.message === "Failed to fetch"
+          ? `Tidak bisa terhubung ke server saat update profil. Endpoint aktif: ${API_BASE_URL}/profile/updateProfile`
+          : error?.message || "Gagal menyimpan profil";
+
+      setNotice({ text: message, error: true });
     } finally {
       setSaving(false);
     }
   };
-
-  const profileImage = resolveImageSource(profile.photo_path);
 
   return (
     <main className="min-h-screen bg-[#191b22] text-[#d7dae2]">
@@ -312,15 +297,9 @@ function ProfilePage() {
                 {item}
               </button>
             ))}
-            <button type="button" className="text-[13px] hover:text-white">
-              🔔
-            </button>
-            <button type="button" className="text-[13px] hover:text-white">
-              🔍
-            </button>
-            <button type="button" className="text-[13px] hover:text-white">
-              👤
-            </button>
+            <button type="button" className="text-[13px] hover:text-white">🔔</button>
+            <button type="button" className="text-[13px] hover:text-white">🔍</button>
+            <button type="button" className="text-[13px] hover:text-white">👤</button>
           </nav>
         </header>
 
@@ -335,13 +314,9 @@ function ProfilePage() {
               <button
                 type="button"
                 onClick={openEditModal}
-                className="absolute bottom-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#2a2d38]/80 text-[#c5cad6] backdrop-blur-sm transition hover:bg-[#34384a] hover:text-white"
-                aria-label="Edit profil"
+                className="absolute bottom-4 right-4 rounded-full bg-[#2a2d38]/80 px-4 py-2 text-[12px] font-semibold text-[#c5cad6] backdrop-blur-sm transition hover:bg-[#34384a] hover:text-white"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
+                Edit Profil
               </button>
             </div>
 
@@ -357,14 +332,9 @@ function ProfilePage() {
               <div className="pt-16" />
 
               <div className="space-y-1">
-                <h1 className="text-[22px] font-bold leading-tight text-white">
-                  {displayName}
-                </h1>
+                <h1 className="text-[22px] font-bold leading-tight text-white">Profil Saya</h1>
                 <p className="text-[14px] leading-relaxed text-[#aeb4c2]">
-                  {profile.profil_detail.motto}
-                </p>
-                <p className="text-[12px] text-[#7f8899]">
-                  {displayLocation}
+                  Jurusan: {profile.profil_detail.jurusan || "Belum diisi"}
                 </p>
               </div>
 
@@ -376,12 +346,6 @@ function ProfilePage() {
                 >
                   Edit Profile
                 </button>
-                <button
-                  type="button"
-                  className="rounded-full border border-[#3f4553] px-5 py-2 text-[13px] font-semibold text-[#d7dae2] transition hover:border-[#5d6578] hover:text-white"
-                >
-                  Lihat Publik
-                </button>
               </div>
             </div>
           </article>
@@ -390,9 +354,7 @@ function ProfilePage() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-[18px] font-semibold text-white">Nilai Mata Pelajaran</h2>
-                <p className="mt-1 text-[12px] text-[#8b92a1]">
-                  Nilai yang sudah diinput user akan tampil di sini.
-                </p>
+                <p className="mt-1 text-[12px] text-[#8b92a1]">Nilai raport yang sudah tersimpan.</p>
               </div>
               <button
                 type="button"
@@ -439,35 +401,34 @@ function ProfilePage() {
               <h2 className="text-[34px] font-semibold leading-none text-white">Edit Profile</h2>
               <button
                 type="button"
-                onClick={() => setIsEditOpen(false)}
+                onClick={closeEditModal}
                 className="rounded-full border border-white/10 px-3 py-2 text-[12px] text-[#b7becb] transition hover:border-white/20 hover:text-white"
               >
                 Tutup
               </button>
             </div>
 
-            <form className="space-y-4" onSubmit={handleSaveProfile}>
+            <form className="space-y-4" onSubmit={handleSave}>
               <input
-                name="first_name"
-                value={form.first_name}
-                onChange={handleInputChange}
-                placeholder="Nama Depan"
+                name="jurusan"
+                value={jurusan}
+                onChange={(event) => setJurusan(event.target.value)}
+                placeholder="Jurusan"
                 className="h-[42px] w-full rounded-[10px] border border-[#5a5f6a] bg-transparent px-4 text-[14px] text-[#f2f2f2] outline-none placeholder:text-[#7f8591] focus:border-[#9ca3af]"
               />
-              <input
-                name="last_name"
-                value={form.last_name}
-                onChange={handleInputChange}
-                placeholder="Nama Belakang"
-                className="h-[42px] w-full rounded-[10px] border border-[#5a5f6a] bg-transparent px-4 text-[14px] text-[#f2f2f2] outline-none placeholder:text-[#7f8591] focus:border-[#9ca3af]"
-              />
-              <input
-                name="motto"
-                value={form.motto}
-                onChange={handleInputChange}
-                placeholder="Moto Profesional"
-                className="h-[42px] w-full rounded-[10px] border border-[#5a5f6a] bg-transparent px-4 text-[14px] text-[#f2f2f2] outline-none placeholder:text-[#7f8591] focus:border-[#9ca3af]"
-              />
+
+              <div>
+                <label className="mb-2 block text-[12px] text-[#cfd5e2]" htmlFor="photo-file">
+                  Foto Profil
+                </label>
+                <input
+                  id="photo-file"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="block w-full rounded-[10px] border border-[#5a5f6a] bg-transparent px-3 py-2 text-[12px] text-[#f2f2f2] file:mr-3 file:rounded-md file:border-0 file:bg-[#0c66c2] file:px-3 file:py-2 file:text-white"
+                />
+              </div>
 
               {scoreFields.map((field) => (
                 <input
@@ -475,27 +436,12 @@ function ProfilePage() {
                   inputMode="decimal"
                   type="number"
                   name={field.key}
-                  value={form.scores[field.key]}
+                  value={raport[field.key]}
                   onChange={(event) => handleScoreChange(field.key, event.target.value)}
-                  placeholder={field.label}
+                  placeholder={`Nilai ${field.label}`}
                   className="h-[42px] w-full rounded-[10px] border border-[#5a5f6a] bg-transparent px-4 text-[14px] text-[#f2f2f2] outline-none placeholder:text-[#7f8591] focus:border-[#9ca3af]"
                 />
               ))}
-
-              <input
-                name="country"
-                value={form.country}
-                onChange={handleInputChange}
-                placeholder="Negara"
-                className="h-[42px] w-full rounded-[10px] border border-[#5a5f6a] bg-transparent px-4 text-[14px] text-[#f2f2f2] outline-none placeholder:text-[#7f8591] focus:border-[#9ca3af]"
-              />
-              <input
-                name="city"
-                value={form.city}
-                onChange={handleInputChange}
-                placeholder="Kota"
-                className="h-[42px] w-full rounded-[10px] border border-[#5a5f6a] bg-transparent px-4 text-[14px] text-[#f2f2f2] outline-none placeholder:text-[#7f8591] focus:border-[#9ca3af]"
-              />
 
               {notice.text ? (
                 <p className={`text-sm ${notice.error ? "text-red-400" : "text-emerald-400"}`}>
@@ -506,7 +452,7 @@ function ProfilePage() {
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setIsEditOpen(false)}
+                  onClick={closeEditModal}
                   className="h-[44px] rounded-full border border-[#4b5160] text-[14px] font-semibold text-[#cfd4df] transition hover:border-[#697187] hover:text-white"
                 >
                   Batal

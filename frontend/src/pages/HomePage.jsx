@@ -3,11 +3,9 @@ import { useNavigate } from "react-router-dom";
 import profilePhoto from "../assets/beranda/photo_profile.png";
 import posterImage from "../assets/beranda/rekomendasi_kampus.png";
 import careerImage from "../assets/beranda/ilustrasi_minat_bakat.png";
+import API_BASE_URL from "../utils/apiBaseUrl";
 
-const API_BASE_URL =
-  (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "");
-
-const topNav = ["Halaman Utama", "Jaringan Saya", "Pekerjaan", "Pesan"];
+const topNav = ["Halaman Utama", "Pekerjaan"];
 const leftShortcuts = ["Item yang disimpan", "Grup", "Buletin", "Acara"];
 const postActions = ["Media", "Acara", "Tulis Artikel"];
 const postFooter = ["Suka", "Komentar", "Bagikan", "Kirim"];
@@ -40,13 +38,16 @@ const rightNews = [
 
 const fallbackProfile = {
   user: {
-    name: "Salman Falah Taqiyuddin",
+    name: "Profil Saya",
   },
   photo_path: null,
   profil_detail: {
-    motto: "Aspiring Mobile App Developer | Transforming Ideas into Reality wit...",
-    city: "Kota Malang",
-    country: "Jawa Timur",
+    jurusan: "Belum diisi",
+    raport: {
+      BI: "",
+      MTK: "",
+      Bing: "",
+    },
   },
 };
 
@@ -60,6 +61,59 @@ function safeParseJson(raw) {
   } catch {
     return null;
   }
+}
+
+function extractApiMessage(payload, fallback) {
+  return payload?.Message || payload?.message || fallback;
+}
+
+function normalizeRaport(raport) {
+  return {
+    BI: raport?.BI ?? "",
+    MTK: raport?.MTK ?? "",
+    Bing: raport?.Bing ?? "",
+  };
+}
+
+function mapProfile(payload) {
+  return {
+    user: {
+      name: payload?.user?.name ?? fallbackProfile.user.name,
+    },
+    photo_path: payload?.photo_path ?? null,
+    profil_detail: {
+      jurusan: payload?.profil_detail?.jurusan ?? "Belum diisi",
+      raport: normalizeRaport(payload?.profil_detail?.raport),
+    },
+  };
+}
+
+async function fetchProfile(token) {
+  const endpoints = ["/profile/getSpecificProfile", "/profile/getSpecific"];
+  let lastMessage = "Gagal mengambil data profil";
+
+  for (const endpoint of endpoints) {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const raw = await response.text();
+    const data = safeParseJson(raw);
+
+    if (response.ok && data?.Success) {
+      return data.Information;
+    }
+
+    if (response.status === 401) {
+      throw new Error("Sesi login berakhir. Silakan login ulang.");
+    }
+
+    lastMessage = extractApiMessage(data, lastMessage);
+  }
+
+  throw new Error(lastMessage);
 }
 
 function resolveImageSource(photoPath) {
@@ -84,60 +138,39 @@ function HomePage() {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        setProfile(fallbackProfile);
+        navigate("/login", { replace: true });
         return;
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/profile/getSpecific`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const raw = await response.text();
-        const data = safeParseJson(raw);
-
-        if (!response.ok || !data?.Success) {
-          throw new Error(data?.Message || "Gagal mengambil data profil");
+        const info = await fetchProfile(token);
+        setProfile(mapProfile(info));
+      } catch (error) {
+        if (error?.message === "Sesi login berakhir. Silakan login ulang.") {
+          localStorage.removeItem("token");
+          navigate("/login", { replace: true });
+          return;
         }
 
-        setProfile({
-          user: {
-            name: data.Information?.user?.name || fallbackProfile.user.name,
-          },
-          photo_path: data.Information?.photo_path ?? null,
-          profil_detail: {
-            motto: data.Information?.profil_detail?.motto || fallbackProfile.profil_detail.motto,
-            city: data.Information?.profil_detail?.city || fallbackProfile.profil_detail.city,
-            country: data.Information?.profil_detail?.country || fallbackProfile.profil_detail.country,
-          },
-        });
-      } catch {
         setProfile(fallbackProfile);
       }
     };
 
     loadProfile();
-  }, []);
+  }, [navigate]);
 
   const displayName = useMemo(() => {
     return profile.user?.name || fallbackProfile.user.name;
   }, [profile]);
 
   const displayMotto = useMemo(() => {
-    return profile.profil_detail?.motto || fallbackProfile.profil_detail.motto;
+    return `Jurusan: ${profile.profil_detail?.jurusan || "Belum diisi"}`;
   }, [profile]);
 
-  const displayLocation = useMemo(() => {
-    const city = profile.profil_detail?.city;
-    const country = profile.profil_detail?.country;
+  const displayRaport = useMemo(() => {
+    const raport = profile.profil_detail?.raport || {};
 
-    if (city && country) {
-      return `${city}, ${country}`;
-    }
-
-    return city || country || "Lokasi belum diisi";
+    return `Raport BI: ${raport.BI || "-"} • MTK: ${raport.MTK || "-"} • Bing: ${raport.Bing || "-"}`;
   }, [profile]);
 
   const profileImageSource = useMemo(() => {
@@ -193,7 +226,7 @@ function HomePage() {
                     {displayName}
                   </h2>
                   <p className="mt-1 text-[13px] text-[#aeb4c2]">{displayMotto}</p>
-                  <p className="mt-1 text-[11px] text-[#8b92a1]">{displayLocation}</p>
+                  <p className="mt-1 text-[11px] text-[#8b92a1]">{displayRaport}</p>
                   <button
                     type="button"
                     onClick={handlePlaceholder}
@@ -336,7 +369,7 @@ function HomePage() {
                   onClick={() => navigate("/jelajah-karir")}
                   className="mt-3 rounded-full bg-[#1284ff] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[#3798ff]"
                 >
-                  Jelajahi Karir
+                  Jelajahi Karirmu
                 </button>
               </div>
               <img src={careerImage} alt="Banner karir" className="w-full object-cover" />

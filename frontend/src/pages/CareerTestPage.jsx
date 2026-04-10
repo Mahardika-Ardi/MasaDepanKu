@@ -1,26 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
-const API_BASE_URL =
-  (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "");
+import API_BASE_URL from "../utils/apiBaseUrl";
 
 const QUESTIONS_PER_PAGE = 4;
-
-const CATEGORY_LABELS = {
-  teknis: "Teknis",
-  sosial: "Sosial",
-  kreatif: "Kreatif",
-  analitis: "Analitis",
-  manajerial: "Manajerial",
-};
-
-const CATEGORY_JOBS = {
-  teknis: ["Software Engineer", "IT Support Specialist", "QA Engineer"],
-  sosial: ["HR Officer", "Customer Success Associate", "Konselor"],
-  kreatif: ["UI/UX Designer", "Content Creator", "Brand Designer"],
-  analitis: ["Data Analyst", "Business Analyst", "Research Assistant"],
-  manajerial: ["Project Coordinator", "Product Owner", "Operations Supervisor"],
-};
 
 async function parseResponse(response) {
   const raw = await response.text();
@@ -32,62 +14,143 @@ async function parseResponse(response) {
   }
 }
 
-function buildDummyAnalysis(questions, answers) {
-  const scoreByCategory = {
-    teknis: 0,
-    sosial: 0,
-    kreatif: 0,
-    analitis: 0,
-    manajerial: 0,
-  };
+function extractApiMessage(payload, fallbackMessage) {
+  return payload?.Message || payload?.message || fallbackMessage;
+}
 
-  questions.forEach((question) => {
-    const score = Number(answers[question.number] || 0);
-    scoreByCategory[question.category] += score;
-  });
+function isValidAnswer(value) {
+  return Number.isInteger(value) && value >= 1 && value <= 5;
+}
 
-  const sortedCategories = Object.entries(scoreByCategory).sort(
-    (left, right) => right[1] - left[1],
+function normalizeAnalysisPayload(payload) {
+  if (!payload || typeof payload !== "object") {
+    return {};
+  }
+
+  if (payload.analysis && typeof payload.analysis === "object") {
+    return payload.analysis;
+  }
+
+  return payload;
+}
+
+function toFriendlyErrorMessage(rawMessage) {
+  if (!rawMessage) {
+    return "Terjadi kendala saat memproses tes. Silakan coba lagi.";
+  }
+
+  const message = String(rawMessage);
+  const lower = message.toLowerCase();
+
+  try {
+    const parsed = JSON.parse(message);
+    const providerCode = parsed?.error?.code;
+    const providerStatus = String(parsed?.error?.status || "").toUpperCase();
+
+    if (
+      providerCode === 503
+      || providerCode === 429
+      || providerStatus === "UNAVAILABLE"
+      || providerStatus === "RESOURCE_EXHAUSTED"
+    ) {
+      return "Layanan analisis AI sedang sibuk karena traffic tinggi. Silakan coba lagi dalam 1-3 menit.";
+    }
+  } catch {
+    // Keep using string-based checks below when message is not JSON.
+  }
+
+  if (
+    lower.includes("high demand")
+    || lower.includes("unavailable")
+    || lower.includes("resource_exhausted")
+    || lower.includes("quota")
+    || lower.includes("exceeded your current quota")
+    || lower.includes("\"code\":429")
+    || lower.includes("\"code\":503")
+    || lower.includes("429")
+    || lower.includes("503")
+  ) {
+    return "Layanan analisis AI sedang sibuk karena traffic tinggi. Silakan coba lagi dalam 1-3 menit.";
+  }
+
+  if (lower.includes("failed generating question")) {
+    return "Soal tes belum bisa dibuat saat ini karena layanan AI sedang sibuk. Silakan coba lagi dalam beberapa menit.";
+  }
+
+  return message;
+}
+
+function isAiCapacityError(rawMessage) {
+  if (!rawMessage) {
+    return false;
+  }
+
+  const message = String(rawMessage);
+  const lower = message.toLowerCase();
+
+  try {
+    const parsed = JSON.parse(message);
+    const providerCode = parsed?.error?.code;
+    const providerStatus = String(parsed?.error?.status || "").toUpperCase();
+
+    if (
+      providerCode === 503
+      || providerCode === 429
+      || providerStatus === "UNAVAILABLE"
+      || providerStatus === "RESOURCE_EXHAUSTED"
+    ) {
+      return true;
+    }
+  } catch {
+    // Continue with string checks for non-JSON error messages.
+  }
+
+  return (
+    lower.includes("high demand")
+    || lower.includes("unavailable")
+    || lower.includes("resource_exhausted")
+    || lower.includes("quota")
+    || lower.includes("exceeded your current quota")
+    || lower.includes("\"code\":429")
+    || lower.includes("\"code\":503")
+    || lower.includes("429")
+    || lower.includes("503")
   );
-  const topCategory = sortedCategories[0]?.[0] || "analitis";
-  const secondCategory = sortedCategories[1]?.[0] || "teknis";
-  const lowestCategory = sortedCategories[sortedCategories.length - 1]?.[0] || "sosial";
+}
 
-  const recommendedJobs = [
-    ...(CATEGORY_JOBS[topCategory] || []),
-    ...(CATEGORY_JOBS[secondCategory] || []),
-  ]
-    .slice(0, 4)
-    .map((title) => ({
-      title,
-      reason: `Kecenderungan Anda cukup kuat pada area ${CATEGORY_LABELS[topCategory]} dan ${CATEGORY_LABELS[secondCategory]}.`,
-    }));
-
+function buildSampleAnalysisResult() {
   return {
-    generated_by: "dummy-result",
-    group_question_id: null,
-    total_questions: questions.length,
-    ai_enabled: false,
-    scores: scoreByCategory,
-    analysis: {
-      summary: `Berdasarkan jawaban Anda, kecenderungan terkuat ada pada area ${CATEGORY_LABELS[topCategory]} dan ${CATEGORY_LABELS[secondCategory]}. Ini menunjukkan Anda cocok pada peran yang membutuhkan kombinasi kekuatan tersebut.`,
-      competency_analysis: {
-        strengths: [
-          `Kecenderungan ${CATEGORY_LABELS[topCategory]} cukup menonjol.`,
-          `Kecenderungan ${CATEGORY_LABELS[secondCategory]} mendukung pilihan karier Anda.`,
-        ],
-        areas_of_improvement: [
-          `Perlu menyeimbangkan area ${CATEGORY_LABELS[lowestCategory]} agar profil Anda lebih lengkap.`,
-          "Perlu melatih konsistensi dalam menjawab tantangan yang kompleks.",
-        ],
-      },
-      recommended_jobs: recommendedJobs,
-      actionable_advice: [
-        `Ikuti kursus atau pelatihan yang relevan dengan area ${CATEGORY_LABELS[topCategory]}.`,
-        "Bangun portofolio sederhana dari proyek nyata.",
-        "Cari komunitas atau mentor untuk memperkuat arah karier Anda.",
+    summary:
+      "Ini adalah hasil simulasi untuk pratinjau tampilan karena layanan AI sedang sibuk. Berdasarkan kecenderungan jawaban, kamu menunjukkan potensi pada peran yang memadukan analisis, komunikasi, dan eksekusi terstruktur.",
+    competency_analysis: {
+      strengths: [
+        "Mampu memahami pola masalah dengan cukup sistematis.",
+        "Memiliki kemauan belajar yang baik untuk meningkatkan skill teknis.",
+      ],
+      areas_of_improvement: [
+        "Perlu meningkatkan konsistensi dalam pengambilan keputusan berbasis data.",
+        "Perlu memperkuat prioritas kerja saat menghadapi beberapa tugas sekaligus.",
       ],
     },
+    recommended_jobs: [
+      {
+        title: "Data Analyst Junior",
+        reason:
+          "Cocok untuk profil yang suka menganalisis informasi dan menarik insight untuk pengambilan keputusan.",
+        roadmap_reference_url: "https://roadmap.sh/data-analyst",
+      },
+      {
+        title: "Business Operations Associate",
+        reason:
+          "Sesuai untuk kemampuan koordinasi, eksekusi, dan perbaikan proses kerja secara bertahap.",
+        roadmap_reference_url: "https://roadmap.sh/product-manager",
+      },
+    ],
+    actionable_advice: [
+      "Mulai dari satu proyek mini analisis data dan publikasikan hasilnya sebagai portofolio.",
+      "Bangun kebiasaan evaluasi mingguan untuk melihat progres skill dan target belajar.",
+      "Latih komunikasi insight secara ringkas agar hasil analisismu mudah dipahami tim.",
+    ],
   };
 }
 
@@ -103,6 +166,8 @@ function CareerTestPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [answers, setAnswers] = useState({});
   const [analysisResult, setAnalysisResult] = useState(null);
+  const [isSampleResult, setIsSampleResult] = useState(false);
+  const [canPreviewSampleResult, setCanPreviewSampleResult] = useState(false);
 
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(questions.length / QUESTIONS_PER_PAGE));
@@ -116,12 +181,12 @@ function CareerTestPage() {
   const currentPageAnswered = useMemo(() => {
     return (
       currentQuestions.length > 0
-      && currentQuestions.every((question) => answers[question.number])
+      && currentQuestions.every((question) => isValidAnswer(answers[question.id]))
     );
   }, [answers, currentQuestions]);
 
   const allAnswered = useMemo(() => {
-    return questions.length > 0 && questions.every((question) => answers[question.number]);
+    return questions.length > 0 && questions.every((question) => isValidAnswer(answers[question.id]));
   }, [answers, questions]);
 
   useEffect(() => {
@@ -156,13 +221,24 @@ function CareerTestPage() {
           return;
         }
 
-        setQuestions(data?.Information?.question || []);
-        setGroupQuestionId(data?.Information?.group_question_id || null);
+        const information = data?.Information || {};
+
+        setQuestions(Array.isArray(information.question) ? information.question : []);
+        setGroupQuestionId(
+          information.group_question_id
+          || information.groupQuestionId
+          || information.id
+          || null,
+        );
         setCurrentPage(0);
         setAnswers({});
+        setCanPreviewSampleResult(false);
+        setIsSampleResult(false);
       } catch (loadError) {
         if (isMounted) {
-          setError(loadError.message || "Gagal memuat soal");
+          const rawMessage = loadError?.message || "Gagal memuat soal";
+          setError(toFriendlyErrorMessage(rawMessage));
+          setCanPreviewSampleResult(isAiCapacityError(rawMessage));
         }
       } finally {
         if (isMounted) {
@@ -178,9 +254,9 @@ function CareerTestPage() {
     };
   }, [navigate, token]);
 
-  const setAnswer = (questionNumber, value) => {
+  const setAnswer = (questionId, value) => {
     setError("");
-    setAnswers((prev) => ({ ...prev, [questionNumber]: value }));
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
   const handleNext = () => {
@@ -198,8 +274,20 @@ function CareerTestPage() {
     setCurrentPage((prev) => Math.max(prev - 1, 0));
   };
 
+  const handlePreviewSampleResult = () => {
+    setError("");
+    setAnalysisResult(buildSampleAnalysisResult());
+    setIsSampleResult(true);
+    setCanPreviewSampleResult(false);
+  };
+
   const handleSubmit = async () => {
-    if (!groupQuestionId || !allAnswered) {
+    if (!groupQuestionId) {
+      setError("Sesi tes tidak ditemukan. Muat ulang halaman dan coba lagi.");
+      return;
+    }
+
+    if (!allAnswered) {
       setError("Pastikan semua pertanyaan sudah dijawab sebelum submit.");
       return;
     }
@@ -208,9 +296,60 @@ function CareerTestPage() {
     setError("");
 
     try {
-      setAnalysisResult(buildDummyAnalysis(questions, answers));
+      const saveAnswerRequests = questions.map(async (question) => {
+        const response = await fetch(`${API_BASE_URL}/useranswer/createAnswer`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            sessionId: Number(groupQuestionId),
+            questionId: Number(question.id),
+            value: Number(answers[question.id]),
+          }),
+        });
+
+        const data = await parseResponse(response);
+
+        if (!response.ok || !data?.Success) {
+          throw new Error(
+            extractApiMessage(data, `Gagal menyimpan jawaban nomor ${question.number}`),
+          );
+        }
+      });
+
+      await Promise.all(saveAnswerRequests);
+
+      const analysisResponse = await fetch(`${API_BASE_URL}/analysis/analysisJawaban`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+      });
+
+      const analysisData = await parseResponse(analysisResponse);
+
+      if (!analysisResponse.ok || !analysisData?.Success) {
+        throw new Error(extractApiMessage(analysisData, "Gagal memproses analisis"));
+      }
+
+      if (!analysisData?.Information) {
+        throw new Error("Hasil analisis belum tersedia dari server.");
+      }
+
+      setAnalysisResult(analysisData.Information);
+      setIsSampleResult(false);
     } catch (submitError) {
-      setError(submitError.message || "Gagal menampilkan hasil");
+      if (isAiCapacityError(submitError?.message)) {
+        setAnalysisResult(buildSampleAnalysisResult());
+        setIsSampleResult(true);
+        setError("");
+      } else {
+        setError(toFriendlyErrorMessage(submitError?.message));
+      }
     } finally {
       setSubmitting(false);
     }
@@ -225,12 +364,13 @@ function CareerTestPage() {
   }
 
   if (analysisResult) {
-    const summary = analysisResult.analysis?.summary || "Hasil analisis belum tersedia.";
-    const competency = analysisResult.analysis?.competency_analysis || {};
+    const analysis = normalizeAnalysisPayload(analysisResult);
+    const summary = analysis.summary || "Hasil analisis belum tersedia.";
+    const competency = analysis.competency_analysis || {};
     const strengths = competency.strengths || [];
     const improvements = competency.areas_of_improvement || [];
-    const jobs = analysisResult.analysis?.recommended_jobs || [];
-    const advices = analysisResult.analysis?.actionable_advice || [];
+    const jobs = analysis.recommended_jobs || [];
+    const advices = analysis.actionable_advice || [];
 
     return (
       <main className="min-h-screen bg-[#191b22] px-4 py-8 text-white lg:px-8">
@@ -241,6 +381,11 @@ function CareerTestPage() {
                 Hasil Tes Minat Bakat
               </p>
               <h1 className="mt-2 text-4xl font-semibold">Rekomendasi Karir</h1>
+              {isSampleResult ? (
+                <p className="mt-3 inline-flex rounded-full border border-amber-300/40 bg-amber-400/10 px-3 py-1 text-[12px] font-semibold text-amber-200">
+                  Mode Simulasi: hasil ini contoh tampilan saat layanan AI sedang sibuk
+                </p>
+              ) : null}
             </div>
             <div className="flex gap-3">
               <Link
@@ -289,8 +434,21 @@ function CareerTestPage() {
                   <article key={job.title} className="rounded-[20px] border border-white/10 p-4">
                     <p className="text-lg font-semibold text-sky-400">{job.title}</p>
                     <p className="mt-2 text-sm leading-6 text-[#d8dbe1]">{job.reason}</p>
+                    {job.roadmap_reference_url ? (
+                      <a
+                        href={job.roadmap_reference_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-3 inline-block text-sm font-semibold text-cyan-300 hover:text-cyan-200"
+                      >
+                        Lihat roadmap pembelajaran
+                      </a>
+                    ) : null}
                   </article>
                 ))}
+                {jobs.length === 0 ? (
+                  <p className="text-sm text-[#9ea4ae]">Belum ada rekomendasi pekerjaan dari analisis.</p>
+                ) : null}
               </div>
             </section>
 
@@ -303,9 +461,13 @@ function CareerTestPage() {
                     <p className="mt-2 leading-6 text-[#d8dbe1]">{advice}</p>
                   </article>
                 ))}
+                {advices.length === 0 ? (
+                  <p className="text-sm text-[#9ea4ae]">Belum ada saran tindak lanjut dari analisis.</p>
+                ) : null}
               </div>
             </section>
           </div>
+
         </div>
       </main>
     );
@@ -333,6 +495,19 @@ function CareerTestPage() {
           </div>
         ) : null}
 
+        {canPreviewSampleResult ? (
+          <div className="mb-6 rounded-2xl border border-amber-300/30 bg-amber-300/10 px-4 py-4 text-sm text-amber-100">
+            <p>Layanan AI sedang sibuk. Kamu tetap bisa lihat contoh tampilan hasil analisis sekarang.</p>
+            <button
+              type="button"
+              onClick={handlePreviewSampleResult}
+              className="mt-3 rounded-full bg-amber-300/90 px-4 py-2 text-[13px] font-semibold text-[#1f2128] transition hover:bg-amber-200"
+            >
+              Lihat Contoh Hasil Analisis
+            </button>
+          </div>
+        ) : null}
+
         <div className="mb-6 flex items-center justify-between text-sm text-[#b8bcc4]">
           <p>
             Halaman {currentPage + 1} dari {totalPages}
@@ -347,12 +522,12 @@ function CareerTestPage() {
               <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
                 <span className="font-semibold text-teal-400">Tidak setuju</span>
                 {[1, 2, 3, 4, 5].map((value) => {
-                  const isActive = answers[question.number] === value;
+                  const isActive = answers[question.id] === value;
                   return (
                     <button
                       key={value}
                       type="button"
-                      onClick={() => setAnswer(question.number, value)}
+                      onClick={() => setAnswer(question.id, value)}
                       className={`flex h-11 w-11 items-center justify-center rounded-full border text-sm font-semibold transition ${
                         isActive
                           ? "border-sky-400 bg-sky-500/20 text-sky-300"
@@ -367,7 +542,7 @@ function CareerTestPage() {
                 <span className="font-semibold text-violet-400">Setuju</span>
               </div>
               <p className="mt-3 text-sm text-[#9ea4ae]">
-                {question.answer?.[answers[question.number] || 3] || "Pilih jawaban untuk melanjutkan"}
+                {question.answer?.[answers[question.id] || 3] || "Pilih jawaban untuk melanjutkan"}
               </p>
             </article>
           ))}

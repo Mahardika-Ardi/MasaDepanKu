@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
-const API_BASE_URL =
-  (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "");
+import API_BASE_URL from "../utils/apiBaseUrl";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -46,7 +44,17 @@ function LoginPage() {
       }
 
       if (!response.ok || !data?.Success) {
-        throw new Error(data?.Message || "Login gagal");
+        let message = data?.Message || "Login gagal";
+
+        if (response.status === 404) {
+          message = "Akun belum terdaftar di server ini. Silakan register terlebih dahulu.";
+        } else if (response.status === 401) {
+          message = "Email atau kata sandi tidak valid.";
+        } else if (response.status >= 500) {
+          message = "Server sedang bermasalah saat memproses login. Coba lagi sebentar.";
+        }
+
+        throw new Error(message);
       }
 
       const token = data?.Information?.token;

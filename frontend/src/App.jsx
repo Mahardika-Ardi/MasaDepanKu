@@ -5,6 +5,7 @@ import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import RequireAuth from "./pages/RequireAuth";
 import CareerTestPage from "./pages/CareerTestPage";
+import CareerTestIntroPage from "./pages/CareerTestIntroPage";
 
 function App() {
   return (
@@ -24,7 +25,7 @@ function App() {
         path="/jelajah-karir"
         element={
           <RequireAuth>
-            <CareerTestPage />
+            <CareerTestIntroPage />
           </RequireAuth>
         }
       />
