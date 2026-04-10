@@ -14,8 +14,71 @@ async function parseResponse(response) {
   }
 }
 
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function extractApiMessage(payload, fallbackMessage) {
   return payload?.Message || payload?.message || fallbackMessage;
+}
+
+function parseProviderError(rawMessage) {
+  if (!rawMessage) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(String(rawMessage));
+    const error = parsed?.error;
+
+    if (!error || typeof error !== "object") {
+      return null;
+    }
+
+    return {
+      code: error.code,
+      status: error.status,
+      message: error.message,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function formatErrorMessage(rawMessage, httpStatus) {
+  const fallback = "Terjadi kendala saat memproses tes.";
+  const baseMessage = rawMessage ? String(rawMessage) : fallback;
+  const provider = parseProviderError(baseMessage);
+
+  if (provider) {
+    const providerLabel = [provider.status, provider.code]
+      .filter((value) => value !== undefined && value !== null && String(value).length > 0)
+      .join("/");
+    const providerMessage = provider.message || "Provider AI tidak mengirim pesan detail.";
+
+    if (providerLabel) {
+      return `AI Provider (${providerLabel}): ${providerMessage}`;
+    }
+
+    return `AI Provider: ${providerMessage}`;
+  }
+
+  if (httpStatus) {
+    return `HTTP ${httpStatus}: ${baseMessage}`;
+  }
+
+  return baseMessage;
+}
+
+function createApiError(response, payload, fallbackMessage) {
+  const rawMessage = extractApiMessage(payload, fallbackMessage);
+  const httpStatus = response?.status || null;
+  const error = new Error(formatErrorMessage(rawMessage, httpStatus));
+
+  error.rawMessage = rawMessage;
+  error.httpStatus = httpStatus;
+
+  return error;
 }
 
 function isValidAnswer(value) {
@@ -34,88 +97,53 @@ function normalizeAnalysisPayload(payload) {
   return payload;
 }
 
-function toFriendlyErrorMessage(rawMessage) {
-  if (!rawMessage) {
-    return "Terjadi kendala saat memproses tes. Silakan coba lagi.";
-  }
+function isAiCapacityError(rawMessage, httpStatus = null) {
+  const provider = parseProviderError(rawMessage);
 
-  const message = String(rawMessage);
-  const lower = message.toLowerCase();
-
-  try {
-    const parsed = JSON.parse(message);
-    const providerCode = parsed?.error?.code;
-    const providerStatus = String(parsed?.error?.status || "").toUpperCase();
-
-    if (
-      providerCode === 503
-      || providerCode === 429
-      || providerStatus === "UNAVAILABLE"
-      || providerStatus === "RESOURCE_EXHAUSTED"
-    ) {
-      return "Layanan analisis AI sedang sibuk karena traffic tinggi. Silakan coba lagi dalam 1-3 menit.";
-    }
-  } catch {
-    // Keep using string-based checks below when message is not JSON.
-  }
-
-  if (
-    lower.includes("high demand")
-    || lower.includes("unavailable")
-    || lower.includes("resource_exhausted")
-    || lower.includes("quota")
-    || lower.includes("exceeded your current quota")
-    || lower.includes("\"code\":429")
-    || lower.includes("\"code\":503")
-    || lower.includes("429")
-    || lower.includes("503")
-  ) {
-    return "Layanan analisis AI sedang sibuk karena traffic tinggi. Silakan coba lagi dalam 1-3 menit.";
-  }
-
-  if (lower.includes("failed generating question")) {
-    return "Soal tes belum bisa dibuat saat ini karena layanan AI sedang sibuk. Silakan coba lagi dalam beberapa menit.";
-  }
-
-  return message;
-}
-
-function isAiCapacityError(rawMessage) {
-  if (!rawMessage) {
+  if (!provider) {
     return false;
   }
 
-  const message = String(rawMessage);
-  const lower = message.toLowerCase();
-
-  try {
-    const parsed = JSON.parse(message);
-    const providerCode = parsed?.error?.code;
-    const providerStatus = String(parsed?.error?.status || "").toUpperCase();
-
-    if (
-      providerCode === 503
-      || providerCode === 429
-      || providerStatus === "UNAVAILABLE"
-      || providerStatus === "RESOURCE_EXHAUSTED"
-    ) {
-      return true;
-    }
-  } catch {
-    // Continue with string checks for non-JSON error messages.
-  }
+  const providerCode = Number(provider.code);
+  const providerStatus = String(provider.status || "").toUpperCase();
 
   return (
-    lower.includes("high demand")
-    || lower.includes("unavailable")
-    || lower.includes("resource_exhausted")
-    || lower.includes("quota")
-    || lower.includes("exceeded your current quota")
-    || lower.includes("\"code\":429")
-    || lower.includes("\"code\":503")
-    || lower.includes("429")
-    || lower.includes("503")
+    providerCode === 429
+    || providerCode === 503
+    || providerStatus === "UNAVAILABLE"
+    || providerStatus === "RESOURCE_EXHAUSTED"
+    || httpStatus === 429
+    || httpStatus === 503
   );
+}
+
+async function requestWithAiRetry(url, options, fallbackMessage, maxAttempts = 3) {
+  let lastResponse = null;
+  let lastData = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const response = await fetch(url, options);
+    const data = await parseResponse(response);
+
+    lastResponse = response;
+    lastData = data;
+
+    if (response.ok && data?.Success) {
+      return { response, data };
+    }
+
+    const message = extractApiMessage(data, fallbackMessage);
+    const shouldRetry =
+      isAiCapacityError(message, response.status);
+
+    if (!shouldRetry || attempt === maxAttempts) {
+      return { response, data };
+    }
+
+    await wait(700 * 2 ** (attempt - 1));
+  }
+
+  return { response: lastResponse, data: lastData };
 }
 
 function buildSampleAnalysisResult() {
@@ -202,19 +230,21 @@ function CareerTestPage() {
       setError("");
 
       try {
-        const response = await fetch(`${API_BASE_URL}/question/create`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+        const { response, data } = await requestWithAiRetry(
+          `${API_BASE_URL}/question/create`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ total_questions: 20 }),
           },
-          body: JSON.stringify({ total_questions: 20 }),
-        });
-
-        const data = await parseResponse(response);
+          "Gagal memuat soal",
+        );
 
         if (!response.ok || !data?.Success) {
-          throw new Error(data?.Message || "Gagal memuat soal");
+          throw createApiError(response, data, "Gagal memuat soal");
         }
 
         if (!isMounted) {
@@ -236,9 +266,11 @@ function CareerTestPage() {
         setIsSampleResult(false);
       } catch (loadError) {
         if (isMounted) {
-          const rawMessage = loadError?.message || "Gagal memuat soal";
-          setError(toFriendlyErrorMessage(rawMessage));
-          setCanPreviewSampleResult(isAiCapacityError(rawMessage));
+          const rawMessage = loadError?.rawMessage || loadError?.message;
+          const httpStatus = loadError?.httpStatus || null;
+
+          setError(loadError?.message || formatErrorMessage(rawMessage, httpStatus));
+          setCanPreviewSampleResult(isAiCapacityError(rawMessage, httpStatus));
         }
       } finally {
         if (isMounted) {
@@ -313,27 +345,27 @@ function CareerTestPage() {
         const data = await parseResponse(response);
 
         if (!response.ok || !data?.Success) {
-          throw new Error(
-            extractApiMessage(data, `Gagal menyimpan jawaban nomor ${question.number}`),
-          );
+          throw createApiError(response, data, `Gagal menyimpan jawaban nomor ${question.number}`);
         }
       });
 
       await Promise.all(saveAnswerRequests);
 
-      const analysisResponse = await fetch(`${API_BASE_URL}/analysis/analysisJawaban`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const { response: analysisResponse, data: analysisData } = await requestWithAiRetry(
+        `${API_BASE_URL}/analysis/analysisJawaban`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({}),
         },
-        body: JSON.stringify({}),
-      });
-
-      const analysisData = await parseResponse(analysisResponse);
+        "Gagal memproses analisis",
+      );
 
       if (!analysisResponse.ok || !analysisData?.Success) {
-        throw new Error(extractApiMessage(analysisData, "Gagal memproses analisis"));
+        throw createApiError(analysisResponse, analysisData, "Gagal memproses analisis");
       }
 
       if (!analysisData?.Information) {
@@ -343,13 +375,11 @@ function CareerTestPage() {
       setAnalysisResult(analysisData.Information);
       setIsSampleResult(false);
     } catch (submitError) {
-      if (isAiCapacityError(submitError?.message)) {
-        setAnalysisResult(buildSampleAnalysisResult());
-        setIsSampleResult(true);
-        setError("");
-      } else {
-        setError(toFriendlyErrorMessage(submitError?.message));
-      }
+      const rawMessage = submitError?.rawMessage || submitError?.message;
+      const httpStatus = submitError?.httpStatus || null;
+
+      setError(submitError?.message || formatErrorMessage(rawMessage, httpStatus));
+      setCanPreviewSampleResult(isAiCapacityError(rawMessage, httpStatus));
     } finally {
       setSubmitting(false);
     }

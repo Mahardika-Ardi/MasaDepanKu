@@ -45,6 +45,10 @@ function App() {
           </RequireAuth>
         }
       />
+      <Route
+        path="*"
+        element={<Navigate to={localStorage.getItem("token") ? "/beranda" : "/login"} replace />}
+      />
     </Routes>
   );
 }
