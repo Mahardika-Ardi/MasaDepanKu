@@ -168,7 +168,7 @@ function CareerTestPage() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [questions, setQuestions] = useState([]);
@@ -178,7 +178,6 @@ function CareerTestPage() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [isSampleResult, setIsSampleResult] = useState(false);
   const [canPreviewSampleResult, setCanPreviewSampleResult] = useState(false);
-  const [isTestStarted, setIsTestStarted] = useState(false);
 
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(questions.length / QUESTIONS_PER_PAGE));
@@ -200,98 +199,104 @@ function CareerTestPage() {
     return questions.length > 0 && questions.every((question) => isValidAnswer(answers[question.id]));
   }, [answers, questions]);
 
-  const loadQuestionsFromSessionStorage = () => {
-    try {
-      const cached = sessionStorage.getItem("careerTestSession");
-      if (cached) {
-        const { questions: cachedQuestions, groupQuestionId: cachedGroupId } = JSON.parse(cached);
-        if (Array.isArray(cachedQuestions) && cachedQuestions.length > 0) {
-          setQuestions(cachedQuestions);
-          setGroupQuestionId(cachedGroupId);
-          setCurrentPage(0);
-          setAnswers({});
-          setCanPreviewSampleResult(false);
-          setIsSampleResult(false);
-          setIsTestStarted(true);
-          return true;
-        }
-      }
-    } catch (err) {
-      console.warn("Failed to load from sessionStorage:", err);
-    }
-    return false;
-  };
-
-  const startTest = async () => {
-    if (!token) {
-      navigate("/login", { replace: true });
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const { response, data } = await requestWithAiRetry(
-        `${API_BASE_URL}/question/create`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ total_questions: 20 }),
-        },
-        "Gagal memuat soal",
-      );
-
-      if (!response.ok || !data?.Success) {
-        throw createApiError(response, data, "Gagal memuat soal");
-      }
-
-      const information = data?.Information || {};
-      const loadedQuestions = Array.isArray(information.question) ? information.question : [];
-      const loadedGroupId = information.group_question_id
-        || information.groupQuestionId
-        || information.id
-        || null;
-
-      setQuestions(loadedQuestions);
-      setGroupQuestionId(loadedGroupId);
-      setCurrentPage(0);
-      setAnswers({});
-      setCanPreviewSampleResult(false);
-      setIsSampleResult(false);
-      setIsTestStarted(true);
-
-      sessionStorage.setItem(
-        "careerTestSession",
-        JSON.stringify({
-          questions: loadedQuestions,
-          groupQuestionId: loadedGroupId,
-        }),
-      );
-    } catch (loadError) {
-      const rawMessage = loadError?.rawMessage || loadError?.message;
-      const httpStatus = loadError?.httpStatus || null;
-
-      setError(loadError?.message || formatErrorMessage(rawMessage, httpStatus));
-      setCanPreviewSampleResult(isAiCapacityError(rawMessage, httpStatus));
-      setIsTestStarted(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     if (!token) {
       navigate("/login", { replace: true });
       return;
     }
 
-    if (loadQuestionsFromSessionStorage()) {
-      return;
+    let isMounted = true;
+
+    async function loadQuestions() {
+      setLoading(true);
+      setError("");
+
+      try {
+        // Cek sessionStorage dulu untuk cache
+        const cached = sessionStorage.getItem("careerTestSession");
+        if (cached) {
+          try {
+            const { questions: cachedQuestions, groupQuestionId: cachedGroupId } = JSON.parse(cached);
+            if (Array.isArray(cachedQuestions) && cachedQuestions.length > 0) {
+              if (isMounted) {
+                setQuestions(cachedQuestions);
+                setGroupQuestionId(cachedGroupId);
+                setCurrentPage(0);
+                setAnswers({});
+                setCanPreviewSampleResult(false);
+                setIsSampleResult(false);
+                setLoading(false);
+              }
+              return;
+            }
+          } catch (err) {
+            console.warn("Failed to parse cached session:", err);
+          }
+        }
+
+        const { response, data } = await requestWithAiRetry(
+          `${API_BASE_URL}/question/create`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ total_questions: 20 }),
+          },
+          "Gagal memuat soal",
+        );
+
+        if (!response.ok || !data?.Success) {
+          throw createApiError(response, data, "Gagal memuat soal");
+        }
+
+        if (!isMounted) {
+          return;
+        }
+
+        const information = data?.Information || {};
+        const loadedQuestions = Array.isArray(information.question) ? information.question : [];
+        const loadedGroupId = information.group_question_id
+          || information.groupQuestionId
+          || information.id
+          || null;
+
+        setQuestions(loadedQuestions);
+        setGroupQuestionId(loadedGroupId);
+        setCurrentPage(0);
+        setAnswers({});
+        setCanPreviewSampleResult(false);
+        setIsSampleResult(false);
+
+        // Simpan ke sessionStorage agar tidak regenerate kalau refresh
+        sessionStorage.setItem(
+          "careerTestSession",
+          JSON.stringify({
+            questions: loadedQuestions,
+            groupQuestionId: loadedGroupId,
+          }),
+        );
+      } catch (loadError) {
+        if (isMounted) {
+          const rawMessage = loadError?.rawMessage || loadError?.message;
+          const httpStatus = loadError?.httpStatus || null;
+
+          setError(loadError?.message || formatErrorMessage(rawMessage, httpStatus));
+          setCanPreviewSampleResult(isAiCapacityError(rawMessage, httpStatus));
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
     }
+
+    loadQuestions();
+
+    return () => {
+      isMounted = false;
+    };
   }, [navigate, token]);
 
   const setAnswer = (questionId, value) => {
@@ -394,7 +399,7 @@ function CareerTestPage() {
     }
   };
 
-  if (isTestStarted && questions.length === 0) {
+  if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#191b22] text-white">
         <p className="text-lg text-[#b8bcc4]">Memuat soal minat bakat...</p>
@@ -435,7 +440,10 @@ function CareerTestPage() {
               </Link>
               <button
                 type="button"
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  sessionStorage.removeItem("careerTestSession");
+                  window.location.reload();
+                }}
                 className="rounded-full bg-[#0c66c2] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0a5ab0]"
               >
                 Ulang Tes
@@ -507,56 +515,6 @@ function CareerTestPage() {
             </section>
           </div>
 
-        </div>
-      </main>
-    );
-  }
-
-  if (!isTestStarted) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#191b22] px-4 text-white">
-        <div className="mx-auto w-full max-w-2xl rounded-[30px] border border-white/8 bg-[#15171d] p-8 shadow-[0_18px_45px_rgba(0,0,0,0.4)]">
-          <div className="mb-6 text-center">
-            <p className="text-sm uppercase tracking-[0.3em] text-sky-400/80">Tes Minat Bakat</p>
-            <h1 className="mt-3 text-4xl font-semibold">Jelajah Karir</h1>
-            <p className="mt-3 text-[#b8bcc4]">Temukan profesi yang sesuai dengan minat dan bakat kamu</p>
-          </div>
-
-          {error ? (
-            <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-              {error}
-            </div>
-          ) : null}
-
-          <div className="mb-6 flex flex-col gap-3">
-            <button
-              type="button"
-              onClick={startTest}
-              disabled={loading}
-              className="rounded-full bg-[#0c66c2] px-6 py-4 text-base font-semibold text-white transition hover:bg-[#0a5ab0] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading ? "Mempersiapkan test..." : "Ambil Test Minat Bakat"}
-            </button>
-            <Link
-              to="/beranda"
-              className="rounded-full border border-white/10 px-6 py-4 text-center text-base font-semibold text-white transition hover:bg-white/5"
-            >
-              Kembali
-            </Link>
-          </div>
-
-          {canPreviewSampleResult ? (
-            <div className="rounded-2xl border border-amber-300/30 bg-amber-300/10 px-4 py-4 text-sm text-amber-100">
-              <p className="mb-3">Layanan AI sedang sibuk. Kamu tetap bisa lihat contoh tampilan hasil analisis sekarang.</p>
-              <button
-                type="button"
-                onClick={handlePreviewSampleResult}
-                className="rounded-full bg-amber-300/90 px-4 py-2 text-[13px] font-semibold text-[#1f2128] transition hover:bg-amber-200"
-              >
-                Lihat Contoh Hasil Analisis
-              </button>
-            </div>
-          ) : null}
         </div>
       </main>
     );
