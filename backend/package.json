@@ -5,13 +5,14 @@
   "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/server.js",
-    "start:dev": "nodemon src/server.js",
-    "start:watch": "nodemon --watch src/server.js",
+    "start": "cross-env NODE_OPTIONS=--experimental-strip-types node src/server.js",
+    "start:dev": "cross-env NODE_OPTIONS=--experimental-strip-types nodemon src/server.js",
+    "start:watch": "cross-env NODE_OPTIONS=--experimental-strip-types nodemon --watch src/server.js",
     "start:prod": "npm run prisma:generate && npm run prisma:deploy && npm start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "postinstall": "npx prisma generate",
+    "postinstall": "npm run prisma:generate",
+    "prisma:generate": "npx prisma generate && node scripts/ensure-prisma-internal-shims.js",
     "prisma:deploy": "npx prisma migrate deploy",
     "make": "node scripts/generate.js"
   },
@@ -50,6 +51,7 @@
     "globals": "17.4.0",
     "nodemon": "3.1.14",
     "prisma": "7.4.2",
+    "cross-env": "^7.0.3",
     "typescript-eslint": "8.57.2"
   }
 }
