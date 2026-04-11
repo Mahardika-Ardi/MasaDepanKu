@@ -117,15 +117,33 @@ function isAiCapacityError(rawMessage, httpStatus = null) {
   );
 }
 
-async function requestWithAiRetry(url, options, fallbackMessage) {
-  const response = await fetch(url, options);
-  const data = await parseResponse(response);
+async function requestWithAiRetry(url, options, fallbackMessage, maxAttempts = 3) {
+  let lastResponse = null;
+  let lastData = null;
 
-  if (response.ok && data?.Success) {
-    return { response, data };
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const response = await fetch(url, options);
+    const data = await parseResponse(response);
+
+    lastResponse = response;
+    lastData = data;
+
+    if (response.ok && data?.Success) {
+      return { response, data };
+    }
+
+    const message = extractApiMessage(data, fallbackMessage);
+    const shouldRetry =
+      isAiCapacityError(message, response.status);
+
+    if (!shouldRetry || attempt === maxAttempts) {
+      return { response, data };
+    }
+
+    await wait(700 * 2 ** (attempt - 1));
   }
 
-  return { response, data };
+  return { response: lastResponse, data: lastData };
 }
 
 function buildSampleAnalysisResult() {
@@ -168,7 +186,7 @@ function CareerTestPage() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [questions, setQuestions] = useState([]);
@@ -178,6 +196,7 @@ function CareerTestPage() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [isSampleResult, setIsSampleResult] = useState(false);
   const [canPreviewSampleResult, setCanPreviewSampleResult] = useState(false);
+  const [hasGeneratedQuestions, setHasGeneratedQuestions] = useState(false);
 
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(questions.length / QUESTIONS_PER_PAGE));
@@ -202,102 +221,61 @@ function CareerTestPage() {
   useEffect(() => {
     if (!token) {
       navigate("/login", { replace: true });
+    }
+  }, [navigate, token]);
+
+  const handleGenerateQuestions = async () => {
+    if (!token) {
+      navigate("/login", { replace: true });
       return;
     }
 
-    let isMounted = true;
+    setLoading(true);
+    setError("");
 
-    async function loadQuestions() {
-      setLoading(true);
-      setError("");
-
-      try {
-        // Cek sessionStorage dulu untuk cache
-        const cached = sessionStorage.getItem("careerTestSession");
-        if (cached) {
-          try {
-            const { questions: cachedQuestions, groupQuestionId: cachedGroupId } = JSON.parse(cached);
-            if (Array.isArray(cachedQuestions) && cachedQuestions.length > 0) {
-              if (isMounted) {
-                setQuestions(cachedQuestions);
-                setGroupQuestionId(cachedGroupId);
-                setCurrentPage(0);
-                setAnswers({});
-                setCanPreviewSampleResult(false);
-                setIsSampleResult(false);
-                setLoading(false);
-              }
-              return;
-            }
-          } catch (err) {
-            console.warn("Failed to parse cached session:", err);
-          }
-        }
-
-        const { response, data } = await requestWithAiRetry(
-          `${API_BASE_URL}/question/create`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ total_questions: 20 }),
+    try {
+      const { response, data } = await requestWithAiRetry(
+        `${API_BASE_URL}/question/create`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          "Gagal memuat soal",
-        );
+          body: JSON.stringify({ total_questions: 20 }),
+        },
+        "Gagal memuat soal",
+      );
 
-        if (!response.ok || !data?.Success) {
-          throw createApiError(response, data, "Gagal memuat soal");
-        }
-
-        if (!isMounted) {
-          return;
-        }
-
-        const information = data?.Information || {};
-        const loadedQuestions = Array.isArray(information.question) ? information.question : [];
-        const loadedGroupId = information.group_question_id
-          || information.groupQuestionId
-          || information.id
-          || null;
-
-        setQuestions(loadedQuestions);
-        setGroupQuestionId(loadedGroupId);
-        setCurrentPage(0);
-        setAnswers({});
-        setCanPreviewSampleResult(false);
-        setIsSampleResult(false);
-
-        // Simpan ke sessionStorage agar tidak regenerate kalau refresh
-        sessionStorage.setItem(
-          "careerTestSession",
-          JSON.stringify({
-            questions: loadedQuestions,
-            groupQuestionId: loadedGroupId,
-          }),
-        );
-      } catch (loadError) {
-        if (isMounted) {
-          const rawMessage = loadError?.rawMessage || loadError?.message;
-          const httpStatus = loadError?.httpStatus || null;
-
-          setError(loadError?.message || formatErrorMessage(rawMessage, httpStatus));
-          setCanPreviewSampleResult(isAiCapacityError(rawMessage, httpStatus));
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+      if (!response.ok || !data?.Success) {
+        throw createApiError(response, data, "Gagal memuat soal");
       }
+
+      const information = data?.Information || {};
+
+      setQuestions(Array.isArray(information.question) ? information.question : []);
+      setGroupQuestionId(
+        information.group_question_id
+        || information.groupQuestionId
+        || information.id
+        || null,
+      );
+      setCurrentPage(0);
+      setAnswers({});
+      setCanPreviewSampleResult(false);
+      setIsSampleResult(false);
+      setHasGeneratedQuestions(true);
+    } catch (loadError) {
+      const rawMessage = loadError?.rawMessage || loadError?.message;
+      const httpStatus = loadError?.httpStatus || null;
+
+      setError(loadError?.message || formatErrorMessage(rawMessage, httpStatus));
+      setCanPreviewSampleResult(isAiCapacityError(rawMessage, httpStatus));
+      setHasGeneratedQuestions(false);
+    } finally {
+      setLoading(false);
     }
-
-    loadQuestions();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [navigate, token]);
+  };
 
   const setAnswer = (questionId, value) => {
     setError("");
@@ -387,7 +365,6 @@ function CareerTestPage() {
 
       setAnalysisResult(analysisData.Information);
       setIsSampleResult(false);
-      sessionStorage.removeItem("careerTestSession");
     } catch (submitError) {
       const rawMessage = submitError?.rawMessage || submitError?.message;
       const httpStatus = submitError?.httpStatus || null;
@@ -402,7 +379,7 @@ function CareerTestPage() {
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#191b22] text-white">
-        <p className="text-lg text-[#b8bcc4]">Memuat soal minat bakat...</p>
+        <p className="text-lg text-[#b8bcc4]">Menyiapkan soal minat bakat...</p>
       </main>
     );
   }
@@ -440,10 +417,7 @@ function CareerTestPage() {
               </Link>
               <button
                 type="button"
-                onClick={() => {
-                  sessionStorage.removeItem("careerTestSession");
-                  window.location.reload();
-                }}
+                onClick={() => window.location.reload()}
                 className="rounded-full bg-[#0c66c2] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0a5ab0]"
               >
                 Ulang Tes
@@ -555,82 +529,102 @@ function CareerTestPage() {
           </div>
         ) : null}
 
-        <div className="mb-6 flex items-center justify-between text-sm text-[#b8bcc4]">
-          <p>
-            Halaman {currentPage + 1} dari {totalPages}
-          </p>
-          <p>{questions.length} soal tersedia</p>
-        </div>
-
-        <div className="space-y-6">
-          {currentQuestions.map((question) => (
-            <article key={question.id} className="rounded-[24px] border border-white/8 bg-[#1b1d24] p-5">
-              <p className="text-lg font-semibold text-white">{question.question}</p>
-              <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-                <span className="font-semibold text-teal-400">Tidak setuju</span>
-                {[1, 2, 3, 4, 5].map((value) => {
-                  const isActive = answers[question.id] === value;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setAnswer(question.id, value)}
-                      className={`flex h-11 w-11 items-center justify-center rounded-full border text-sm font-semibold transition ${
-                        isActive
-                          ? "border-sky-400 bg-sky-500/20 text-sky-300"
-                          : "border-white/20 text-white/80 hover:border-sky-300/50 hover:text-white"
-                      }`}
-                      aria-label={`Jawaban ${value} untuk pertanyaan ${question.number}`}
-                    >
-                      {value}
-                    </button>
-                  );
-                })}
-                <span className="font-semibold text-violet-400">Setuju</span>
-              </div>
-              <p className="mt-3 text-sm text-[#9ea4ae]">
-                {question.answer?.[answers[question.id] || 3] || "Pilih jawaban untuk melanjutkan"}
-              </p>
-            </article>
-          ))}
-        </div>
-
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={handleBack}
-            disabled={currentPage === 0}
-            className="rounded-full border border-white/10 bg-white px-6 py-3 text-sm font-semibold text-[#1f2128] transition hover:bg-[#f3f3f3] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Kembali
-          </button>
-
-          <div className="flex gap-3">
-            {currentPage < totalPages - 1 ? (
-              <button
-                type="button"
-                onClick={handleNext}
-                disabled={!currentPageAnswered}
-                className="rounded-full bg-[#0c66c2] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0a5ab0] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Lanjutkan
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={submitting || !allAnswered}
-                className="rounded-full bg-[#0c66c2] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0a5ab0] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {submitting ? "Memproses..." : "Submit"}
-              </button>
-            )}
+        {!hasGeneratedQuestions ? (
+          <div className="mb-6 rounded-[24px] border border-white/10 bg-[#1b1d24] px-5 py-7">
+            <p className="text-sm text-[#c5cbd8]">
+              Soal belum dibuat. Klik tombol di bawah untuk mulai generate soal tes minat dan bakat.
+            </p>
+            <button
+              type="button"
+              onClick={handleGenerateQuestions}
+              className="mt-4 rounded-full bg-[#0c66c2] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0a5ab0]"
+            >
+              Generate Soal
+            </button>
           </div>
-        </div>
+        ) : null}
 
-        <p className="mt-5 text-center text-sm text-[#9ea4ae]">
-          Pastikan semua pertanyaan dijawab sebelum submit.
-        </p>
+        {hasGeneratedQuestions ? (
+          <>
+
+            <div className="mb-6 flex items-center justify-between text-sm text-[#b8bcc4]">
+              <p>
+                Halaman {currentPage + 1} dari {totalPages}
+              </p>
+              <p>{questions.length} soal tersedia</p>
+            </div>
+
+            <div className="space-y-6">
+              {currentQuestions.map((question) => (
+                <article key={question.id} className="rounded-[24px] border border-white/8 bg-[#1b1d24] p-5">
+                  <p className="text-lg font-semibold text-white">{question.question}</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+                    <span className="font-semibold text-teal-400">Tidak setuju</span>
+                    {[1, 2, 3, 4, 5].map((value) => {
+                      const isActive = answers[question.id] === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setAnswer(question.id, value)}
+                          className={`flex h-11 w-11 items-center justify-center rounded-full border text-sm font-semibold transition ${
+                            isActive
+                              ? "border-sky-400 bg-sky-500/20 text-sky-300"
+                              : "border-white/20 text-white/80 hover:border-sky-300/50 hover:text-white"
+                          }`}
+                          aria-label={`Jawaban ${value} untuk pertanyaan ${question.number}`}
+                        >
+                          {value}
+                        </button>
+                      );
+                    })}
+                    <span className="font-semibold text-violet-400">Setuju</span>
+                  </div>
+                  <p className="mt-3 text-sm text-[#9ea4ae]">
+                    {question.answer?.[answers[question.id] || 3] || "Pilih jawaban untuk melanjutkan"}
+                  </p>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={handleBack}
+                disabled={currentPage === 0}
+                className="rounded-full border border-white/10 bg-white px-6 py-3 text-sm font-semibold text-[#1f2128] transition hover:bg-[#f3f3f3] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Kembali
+              </button>
+
+              <div className="flex gap-3">
+                {currentPage < totalPages - 1 ? (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={!currentPageAnswered}
+                    className="rounded-full bg-[#0c66c2] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0a5ab0] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Lanjutkan
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={submitting || !allAnswered}
+                    className="rounded-full bg-[#0c66c2] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0a5ab0] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {submitting ? "Memproses..." : "Submit"}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <p className="mt-5 text-center text-sm text-[#9ea4ae]">
+              Pastikan semua pertanyaan dijawab sebelum submit.
+            </p>
+          </>
+        ) : null}
       </div>
     </main>
   );

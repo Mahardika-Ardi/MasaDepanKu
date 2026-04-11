@@ -58,7 +58,7 @@ function mapProfile(payload) {
   };
 }
 
-function resolveImageSource(photoPath) {
+function resolveImageSource(photoPath, cacheKey) {
   if (!photoPath) {
     return profilePhotoFallback;
   }
@@ -68,7 +68,12 @@ function resolveImageSource(photoPath) {
     photoPath.startsWith("https://") ||
     photoPath.startsWith("/")
   ) {
-    return photoPath;
+    if (!cacheKey) {
+      return photoPath;
+    }
+
+    const separator = photoPath.includes("?") ? "&" : "?";
+    return `${photoPath}${separator}v=${cacheKey}`;
   }
 
   return profilePhotoFallback;
@@ -82,9 +87,13 @@ async function fetchProfile(token) {
     let response;
 
     try {
-      response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const requestUrl = `${API_BASE_URL}${endpoint}?t=${Date.now()}`;
+      response = await fetch(requestUrl, {
+        cache: "no-store",
         headers: {
           Authorization: `Bearer ${token}`,
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
         },
       });
     } catch (error) {
@@ -117,6 +126,7 @@ function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [notice, setNotice] = useState({ text: "", error: false });
+  const [imageCacheKey, setImageCacheKey] = useState(Date.now());
 
   const [jurusan, setJurusan] = useState("");
   const [raport, setRaport] = useState(normalizeRaport(null));
@@ -138,6 +148,7 @@ function ProfilePage() {
         const mapped = mapProfile(info);
 
         setProfile(mapped);
+        setImageCacheKey(Date.now());
         setJurusan(mapped.profil_detail.jurusan === "Belum diisi" ? "" : mapped.profil_detail.jurusan);
         setRaport(normalizeRaport(mapped.profil_detail.raport));
       } catch (error) {
@@ -166,12 +177,12 @@ function ProfilePage() {
     () =>
       scoreFields.map((field) => ({
         ...field,
-        value: profile.profil_detail.raport[field.key] || "Belum diisi",
+        value: profile.profil_detail.raport[field.key] ?? "Belum diisi",
       })),
     [profile],
   );
 
-  const profileImage = previewUrl || resolveImageSource(profile.photo_path);
+  const profileImage = previewUrl || resolveImageSource(profile.photo_path, imageCacheKey);
 
   const openEditModal = () => {
     setNotice({ text: "", error: false });
@@ -262,6 +273,15 @@ function ProfilePage() {
       setProfile(mapped);
       setJurusan(mapped.profil_detail.jurusan === "Belum diisi" ? "" : mapped.profil_detail.jurusan);
       setRaport(normalizeRaport(mapped.profil_detail.raport));
+      setImageCacheKey(Date.now());
+
+      const freshInfo = await fetchProfile(token);
+      const freshMapped = mapProfile(freshInfo);
+      setProfile(freshMapped);
+      setJurusan(freshMapped.profil_detail.jurusan === "Belum diisi" ? "" : freshMapped.profil_detail.jurusan);
+      setRaport(normalizeRaport(freshMapped.profil_detail.raport));
+      setImageCacheKey(Date.now());
+
       setPhotoFile(null);
       setPreviewUrl("");
       setIsEditOpen(false);
