@@ -117,6 +117,16 @@ function isAiCapacityError(rawMessage, httpStatus = null) {
   );
 }
 
+function isAnalysisCacheShapeError(rawMessage, httpStatus = null) {
+  const message = String(rawMessage || "").toLowerCase();
+
+  return (
+    httpStatus === 500
+    && message.includes("cannot read properties of undefined")
+    && message.includes("profildetail")
+  );
+}
+
 async function requestWithAiRetry(url, options, fallbackMessage, maxAttempts = 3) {
   let lastResponse = null;
   let lastData = null;
@@ -144,6 +154,45 @@ async function requestWithAiRetry(url, options, fallbackMessage, maxAttempts = 3
   }
 
   return { response: lastResponse, data: lastData };
+}
+
+async function requestAnalysisWithRecovery(token) {
+  const endpoint = `${API_BASE_URL}/analysis/analysisJawaban`;
+  const maxAttempts = 2;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const { response, data } = await requestWithAiRetry(
+      endpoint,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+      },
+      "Gagal memproses analisis",
+    );
+
+    if (response.ok && data?.Success && data?.Information) {
+      return data.Information;
+    }
+
+    const rawMessage = extractApiMessage(data, "Gagal memproses analisis");
+
+    if (isAnalysisCacheShapeError(rawMessage, response.status) && attempt < maxAttempts) {
+      await wait(61000);
+      continue;
+    }
+
+    if (!response.ok || !data?.Success) {
+      throw createApiError(response, data, "Gagal memproses analisis");
+    }
+
+    throw new Error("Hasil analisis belum tersedia dari server.");
+  }
+
+  throw new Error("Gagal memproses analisis");
 }
 
 function buildSampleAnalysisResult() {
@@ -416,26 +465,7 @@ function CareerTestPage() {
 
       await Promise.all(saveAnswerRequests);
 
-      const { response: analysisResponse, data: analysisData } = await requestWithAiRetry(
-        `${API_BASE_URL}/analysis/analysisJawaban`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({}),
-        },
-        "Gagal memproses analisis",
-      );
-
-      if (!analysisResponse.ok || !analysisData?.Success) {
-        throw createApiError(analysisResponse, analysisData, "Gagal memproses analisis");
-      }
-
-      if (!analysisData?.Information) {
-        throw new Error("Hasil analisis belum tersedia dari server.");
-      }
+      const analysisInformation = await requestAnalysisWithRecovery(token);
 
       await fetch(`${API_BASE_URL}/testsession/finishTest`, {
         method: "PATCH",
@@ -444,7 +474,7 @@ function CareerTestPage() {
         },
       });
 
-      setAnalysisResult(analysisData.Information);
+      setAnalysisResult(analysisInformation);
       setIsSampleResult(false);
     } catch (submitError) {
       const rawMessage = submitError?.rawMessage || submitError?.message;
