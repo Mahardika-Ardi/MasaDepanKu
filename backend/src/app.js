@@ -2,9 +2,9 @@ import express from "express";
 import cors from "cors";
 import "dotenv/config";
 import swaggerUi from "swagger-ui-express";
-import swaggerSpecs from "./config/swagger.config.js";
-import errorHandler from "./middlewares/error_handler.middleware.js";
-import RoutesLoader from "./bootstrap/route.bootstrap.js";
+import swaggerSpecs from "./config/swagger.js";
+import errorHandler from "./middlewares/error_handler.js";
+import RoutesLoader from "./bootstrap/route.js";
 
 export function CreateApp() {
   const app = express();

@@ -1,4 +1,4 @@
-import { sendError } from "../utils/http_error.utils.js";
+import { sendError } from "../utils/http_error.js";
 import AnalysisService from "./analysis.service.js";
 
 class AnalysisController {

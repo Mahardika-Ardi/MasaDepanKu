@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { CreateApp } from "./app.js";
-import { connectionDatabase } from "./config/prisma.config.js";
+import { connectionDatabase } from "./config/prisma.js";
 
 async function StartServer() {
   try {

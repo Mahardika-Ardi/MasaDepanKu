@@ -1,7 +1,7 @@
 import { AuthDto } from "./dto/auth.dto.js";
 import AuthService from "./auth.service.js";
 import { UserCreateDto } from "../user/dto/user_create.dto.js";
-import { sendError } from "../utils/http_error.utils.js";
+import { sendError } from "../utils/http_error.js";
 
 class AuthController {
   async register(req, res) {

@@ -1,4 +1,4 @@
-import { sendError } from "../utils/http_error.utils.js";
+import { sendError } from "../utils/http_error.js";
 import { UseranswerCreateDto } from "./dto/useranswer_create.dto.js";
 import UseranswerService from "./useranswer.service.js";
 

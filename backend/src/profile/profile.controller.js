@@ -1,7 +1,7 @@
 import { ProfileUpdateDto } from "./dto/profile_update.dto.js";
 import ProfileService from "./profile.service.js";
-import cloudinary from "../config/cloudinary.config.js";
-import { sendError } from "../utils/http_error.utils.js";
+import cloudinary from "../config/cloudinary.js";
+import { sendError } from "../utils/http_error.js";
 
 class ProfileController {
   async findone(req, res) {

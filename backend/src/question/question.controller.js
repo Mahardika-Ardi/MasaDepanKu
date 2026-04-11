@@ -1,4 +1,4 @@
-import { sendError } from "../utils/http_error.utils.js";
+import { sendError } from "../utils/http_error.js";
 import QuestionService from "./question.service.js";
 
 class QuestionController {

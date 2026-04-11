@@ -7,6 +7,7 @@ CREATE TABLE `Users` (
     `role` ENUM('USER', 'ADMIN') NOT NULL DEFAULT 'USER',
 
     UNIQUE INDEX `Users_email_key`(`email`),
+    INDEX `Users_role_idx`(`role`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -40,6 +41,10 @@ CREATE TABLE `TestSession` (
     `aiAnalysis` JSON NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    INDEX `TestSession_userId_idx`(`userId`),
+    INDEX `TestSession_status_idx`(`status`),
+    INDEX `TestSession_userId_status_idx`(`userId`, `status`),
+    INDEX `TestSession_createdAt_idx`(`createdAt`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -52,6 +57,8 @@ CREATE TABLE `Question` (
     `answer` JSON NOT NULL,
     `category` ENUM('teknis', 'sosial', 'kreatif', 'analitis', 'manajerial') NOT NULL,
 
+    INDEX `Question_sessionId_idx`(`sessionId`),
+    INDEX `Question_category_idx`(`category`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -62,6 +69,8 @@ CREATE TABLE `UserAnswer` (
     `questionId` INTEGER NOT NULL,
     `value` INTEGER NOT NULL,
 
+    INDEX `UserAnswer_sessionId_idx`(`sessionId`),
+    INDEX `UserAnswer_questionId_idx`(`questionId`),
     UNIQUE INDEX `UserAnswer_sessionId_questionId_key`(`sessionId`, `questionId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

@@ -1,5 +1,5 @@
 import { Prisma } from "../../generated/prisma/client.ts";
-import { createError } from "./http_error.utils.js";
+import { createError } from "./http_error.js";
 
 function prismaErrors(error) {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {

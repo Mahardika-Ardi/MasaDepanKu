@@ -1,68 +1,35 @@
-import prisma from "../config/prisma.config.js";
-import { createError } from "../utils/http_error.utils.js";
-import prismaErrors from "../utils/prisma_errors.utils.js";
+import { createError } from "../utils/http_error.js";
+import Testsessionrepository from "./testsession.repository.js";
 
 class TestsessionService {
   async find(id) {
-    try {
-      const findSession = await prisma.testSession.findFirst({
-        where: { userId: id, status: "PENDING" },
-        include: {
-          question: {
-            orderBy: { number: "asc" },
-          },
-          answers: true,
-        },
-      });
+    const find = await Testsessionrepository.find(id);
 
-      if (!findSession) {
-        return null;
-      }
-
-      return findSession;
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw prismaError || error;
+    if (!find) {
+      return null;
     }
+
+    return find;
   }
 
   async finish(id) {
-    try {
-      const finishSession = await prisma.testSession.update({
-        where: { userId: id },
-        data: { status: "COMPLETED" },
-      });
+    const finish = await Testsessionrepository.finish(id);
 
-      if (!finishSession) {
-        throw createError("Failed finishing test session", "BAD_REQUEST");
-      }
-
-      return finishSession;
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw prismaError || error;
+    if (!finish) {
+      throw createError("Failed finishing test session", "BAD_REQUEST");
     }
+
+    return finish;
   }
 
   async cancel(id) {
-    try {
-      const cancelSession = await prisma.testSession.update({
-        where: { userId: id },
-        data: { status: "FAILED" },
-      });
+    const cancel = await Testsessionrepository.cancel(id);
 
-      if (!cancelSession) {
-        throw createError("Failed canceling test session", "BAD_REQUEST");
-      }
-
-      return cancelSession;
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw prismaError || error;
+    if (!cancel) {
+      throw createError("Failed canceling test session", "BAD_REQUEST");
     }
+
+    return cancel;
   }
 }
 

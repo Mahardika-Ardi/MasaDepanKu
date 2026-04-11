@@ -1,6 +1,6 @@
 import express from "express";
 import QuestionController from "./question.controller.js";
-import verifyMiddleware from "../middlewares/auth.middleware.js";
+import verifyMiddleware from "../middlewares/auth.js";
 
 const route = express.Router();
 

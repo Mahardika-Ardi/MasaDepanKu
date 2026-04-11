@@ -3,7 +3,7 @@ import {
   multersConfig,
   multerConfigCloudinaryImage,
   multersConfigCloudinaryDocument,
-} from "../config/multer.config.js";
+} from "../config/multer.js";
 
 export const uploadSingleImage = multerConfig.single("file");
 export const uploadMultipleFiles = multersConfig.array("file", 5);

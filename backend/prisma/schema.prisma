@@ -17,6 +17,8 @@ model Users {
   photoProfiles PhotoProfile?
   profilDetail  ProfilDetail?
   testSessions  TestSession[]
+
+  @@index([role])
 }
 
 model PhotoProfile {
@@ -47,6 +49,11 @@ model TestSession {
   user     Users        @relation(fields: [userId], references: [id], onDelete: Cascade)
   question Question[]
   answers  UserAnswer[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([userId, status])
+  @@index([createdAt])
 }
 
 model Question {
@@ -59,6 +66,9 @@ model Question {
 
   session TestSession  @relation(fields: [sessionId], references: [id])
   answers UserAnswer[]
+
+  @@index([sessionId])
+  @@index([category])
 }
 
 model UserAnswer {
@@ -71,6 +81,8 @@ model UserAnswer {
   question Question    @relation(fields: [questionId], references: [id])
 
   @@unique([sessionId, questionId])
+  @@index([sessionId])
+  @@index([questionId])
 }
 
 enum Role {

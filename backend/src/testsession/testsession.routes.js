@@ -1,7 +1,7 @@
 import express from "express";
 import TestsessionController from "./testsession.controller.js";
-import verifyMiddleware from "../middlewares/auth.middleware.js";
-import ownerShipCheck from "../middlewares/ownership_check.middleware.js";
+import verifyMiddleware from "../middlewares/auth.js";
+import ownerShipCheck from "../middlewares/ownership_check.js";
 
 const route = express.Router();
 

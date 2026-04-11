@@ -1,14 +1,14 @@
 import express from "express";
 import UserController from "./user.controller.js";
-import verifyMiddleware from "../middlewares/auth.middleware.js";
-import roleCheck from "../middlewares/role.middleware.js";
-import ownerShipCheck from "../middlewares/ownership_check.middleware.js";
+import verifyMiddleware from "../middlewares/auth.js";
+import roleCheck from "../middlewares/role.js";
+import ownerShipCheck from "../middlewares/ownership_check.js";
 
 const route = express.Router();
 
 /**
  * @swagger
- * /users/getUsers:
+ * /user/getUsers:
  *   get:
  *     summary: Ambil semua user (pagination)
  *     tags: [Users]
@@ -92,7 +92,7 @@ route.get(
 
 /**
  * @swagger
- * /users/getSpecificUser:
+ * /user/getSpecificUser:
  *   get:
  *     summary: Ambil 1 user berdasarkan filter name/email
  *     tags: [Users]
@@ -157,7 +157,7 @@ route.get(
 
 /**
  * @swagger
- * /users/updateUsers:
+ * /user/updateUsers:
  *   patch:
  *     summary: Update data user berdasarkan path id
  *     tags: [Users]
@@ -205,7 +205,7 @@ route.patch(
 
 /**
  * @swagger
- * /users/deleteUser:
+ * /user/deleteUser:
  *   delete:
  *     summary: Hapus akun user login (tanpa path id)
  *     tags: [Users]

@@ -1,9 +1,9 @@
 import express from "express";
 import ProfileController from "./profile.controller.js";
-import verifyMiddleware from "../middlewares/auth.middleware.js";
-import ownerShipCheck from "../middlewares/ownership_check.middleware.js";
-import roleCheck from "../middlewares/role.middleware.js";
-import { uploadSingleImageCloudinary } from "../middlewares/upload.middleware.js";
+import verifyMiddleware from "../middlewares/auth.js";
+import ownerShipCheck from "../middlewares/ownership_check.js";
+import roleCheck from "../middlewares/role.js";
+import { uploadSingleImageCloudinary } from "../middlewares/upload.js";
 
 const route = express.Router();
 

@@ -1,93 +1,55 @@
-import prisma from "../config/prisma.config.js";
-import { createError } from "../utils/http_error.utils.js";
-import prismaErrors from "../utils/prisma_errors.utils.js";
+import { createError } from "../utils/http_error.js";
+import UserRepository from "./user.repository.js";
 
 class UserService {
   async findall(page, limit) {
     const skip = (page - 1) * limit;
-    try {
-      const [users, total] = await prisma.$transaction([
-        prisma.users.findMany({
-          take: limit,
-          skip: skip,
-          orderBy: { id: "asc" },
-          select: { id: true, name: true, email: true, role: true },
-        }),
-        prisma.users.count(),
-      ]);
+    const users = await UserRepository.findAll(skip, limit);
 
-      if (!users || users.length === 0) {
-        return {
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-          data: [],
-        };
-      }
-
+    if (!users || users.length === 0) {
       return {
-        total,
+        total: users.total,
         page,
         limit,
-        totalPages: Math.ceil(total / limit),
-        data: users,
+        totalPages: Math.ceil(users.total / limit),
+        data: [],
       };
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw prismaError || error;
     }
+
+    return {
+      total: users.total,
+      page,
+      limit,
+      totalPages: Math.ceil(users.total / limit),
+      data: users.users,
+    };
   }
   async findone(where) {
-    try {
-      const find = await prisma.users.findFirst({
-        where,
-        select: { id: true, name: true, email: true, role: true },
-      });
+    const find = await UserRepository.findOne(where);
 
-      if (!find) {
-        throw createError("Failed showwing user data!", "NOT_FOUND");
-      }
-
-      return find;
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw prismaError || error;
+    if (!find) {
+      throw createError("Failed showwing user data!", "NOT_FOUND");
     }
+
+    return find;
   }
   async update(id, data) {
-    try {
-      const updt = await prisma.users.update({
-        where: { id },
-        data,
-        select: { id: true, name: true, email: true, role: true },
-      });
+    const updt = await UserRepository.update(id, data);
 
-      if (!updt) {
-        throw createError("Failed updating user data!", "BAD_REQUEST");
-      }
-
-      return updt;
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw prismaError || error;
+    if (!updt) {
+      throw createError("Failed updating user data!", "BAD_REQUEST");
     }
+
+    return updt;
   }
   async delete(id) {
-    try {
-      const delt = await prisma.users.delete({ where: { id } });
+    const delt = await UserRepository.delete(id);
 
-      if (!delt) {
-        throw createError("Failed deleting user data!", "BAD_REQUEST");
-      }
-    } catch (error) {
-      const prismaError = prismaErrors(error);
-      console.log(error);
-      throw prismaError || error;
+    if (!delt) {
+      throw createError("Failed deleting user data!", "BAD_REQUEST");
     }
+
+    return `User woth id ${id} has been deleted`;
   }
 }
 
