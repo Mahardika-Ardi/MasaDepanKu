@@ -186,7 +186,7 @@ function CareerTestPage() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [questions, setQuestions] = useState([]);
@@ -221,7 +221,81 @@ function CareerTestPage() {
   useEffect(() => {
     if (!token) {
       navigate("/login", { replace: true });
+      return;
     }
+
+    let isMounted = true;
+
+    async function loadPendingSession() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/testsession/findTestSession`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await parseResponse(response);
+
+        if (!response.ok || !data?.Success) {
+          throw createApiError(response, data, "Gagal memuat sesi tes");
+        }
+
+        if (!isMounted) {
+          return;
+        }
+
+        const information = data?.Information;
+
+        if (!information || !Array.isArray(information.question) || information.question.length === 0) {
+          setHasGeneratedQuestions(false);
+          setQuestions([]);
+          setGroupQuestionId(null);
+          setAnswers({});
+          setCurrentPage(0);
+          return;
+        }
+
+        const loadedQuestions = information.question;
+        const loadedAnswers = Array.isArray(information.answers)
+          ? information.answers.reduce((acc, item) => {
+            acc[item.questionId] = item.value;
+            return acc;
+          }, {})
+          : {};
+
+        setQuestions(loadedQuestions);
+        setGroupQuestionId(information.id || null);
+        setAnswers(loadedAnswers);
+        setCurrentPage(0);
+        setCanPreviewSampleResult(false);
+        setIsSampleResult(false);
+        setHasGeneratedQuestions(true);
+      } catch (loadError) {
+        if (!isMounted) {
+          return;
+        }
+
+        const rawMessage = loadError?.rawMessage || loadError?.message;
+        const httpStatus = loadError?.httpStatus || null;
+
+        setError(loadError?.message || formatErrorMessage(rawMessage, httpStatus));
+        setHasGeneratedQuestions(false);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadPendingSession();
+
+    return () => {
+      isMounted = false;
+    };
   }, [navigate, token]);
 
   const handleGenerateQuestions = async () => {
@@ -362,6 +436,13 @@ function CareerTestPage() {
       if (!analysisData?.Information) {
         throw new Error("Hasil analisis belum tersedia dari server.");
       }
+
+      await fetch(`${API_BASE_URL}/testsession/finishTest`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       setAnalysisResult(analysisData.Information);
       setIsSampleResult(false);
