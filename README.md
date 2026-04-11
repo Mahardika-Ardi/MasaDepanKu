@@ -1,4 +1,4 @@
-# MasaDepanKu
+# MasaDepanKu.id
 
 MasaDepanKu adalah aplikasi **web fullstack** untuk membantu pengguna mempersiapkan arah masa depan melalui proses:
 
