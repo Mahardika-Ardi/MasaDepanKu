@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import API_BASE_URL from "../utils/apiBaseUrl";
 
 const QUESTIONS_PER_PAGE = 4;
+const CACHE_TTL_MS = 61000;
 
 async function parseResponse(response) {
   const raw = await response.text();
@@ -121,9 +122,8 @@ function isAnalysisCacheShapeError(rawMessage, httpStatus = null) {
   const message = String(rawMessage || "").toLowerCase();
 
   return (
-    httpStatus === 500
-    && message.includes("cannot read properties of undefined")
-    && message.includes("profildetail")
+    (message.includes("cannot read properties of undefined") && message.includes("profildetail"))
+    || (httpStatus === 500 && message.includes("failed to analyze user answers"))
   );
 }
 
@@ -158,7 +158,7 @@ async function requestWithAiRetry(url, options, fallbackMessage, maxAttempts = 3
 
 async function requestAnalysisWithRecovery(token) {
   const endpoint = `${API_BASE_URL}/analysis/analysisJawaban`;
-  const maxAttempts = 2;
+  const maxAttempts = 3;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const { response, data } = await requestWithAiRetry(
@@ -246,6 +246,8 @@ function CareerTestPage() {
   const [isSampleResult, setIsSampleResult] = useState(false);
   const [canPreviewSampleResult, setCanPreviewSampleResult] = useState(false);
   const [hasGeneratedQuestions, setHasGeneratedQuestions] = useState(false);
+  const [submitProgress, setSubmitProgress] = useState("");
+  const [lastPotentialCacheWriteAt, setLastPotentialCacheWriteAt] = useState(0);
 
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(questions.length / QUESTIONS_PER_PAGE));
@@ -323,6 +325,7 @@ function CareerTestPage() {
         setCanPreviewSampleResult(false);
         setIsSampleResult(false);
         setHasGeneratedQuestions(true);
+        setLastPotentialCacheWriteAt(Date.now());
       } catch (loadError) {
         if (!isMounted) {
           return;
@@ -388,6 +391,7 @@ function CareerTestPage() {
       setCanPreviewSampleResult(false);
       setIsSampleResult(false);
       setHasGeneratedQuestions(true);
+      setLastPotentialCacheWriteAt(Date.now());
     } catch (loadError) {
       const rawMessage = loadError?.rawMessage || loadError?.message;
       const httpStatus = loadError?.httpStatus || null;
@@ -439,6 +443,7 @@ function CareerTestPage() {
     }
 
     setSubmitting(true);
+    setSubmitProgress("Menyimpan jawaban...");
     setError("");
 
     try {
@@ -465,6 +470,16 @@ function CareerTestPage() {
 
       await Promise.all(saveAnswerRequests);
 
+      const elapsedSinceCacheWrite = Date.now() - lastPotentialCacheWriteAt;
+      const remainingSafetyWindow = CACHE_TTL_MS - elapsedSinceCacheWrite;
+
+      if (remainingSafetyWindow > 0) {
+        setSubmitProgress("Sinkronisasi data sesi, mohon tunggu sebentar...");
+        await wait(remainingSafetyWindow);
+      }
+
+      setSubmitProgress("Memproses analisis...");
+
       const analysisInformation = await requestAnalysisWithRecovery(token);
 
       await fetch(`${API_BASE_URL}/testsession/finishTest`, {
@@ -480,10 +495,15 @@ function CareerTestPage() {
       const rawMessage = submitError?.rawMessage || submitError?.message;
       const httpStatus = submitError?.httpStatus || null;
 
-      setError(submitError?.message || formatErrorMessage(rawMessage, httpStatus));
+      if (isAnalysisCacheShapeError(rawMessage, httpStatus)) {
+        setError("Server masih sinkronisasi data sesi. Coba submit ulang dalam 1 menit.");
+      } else {
+        setError(submitError?.message || formatErrorMessage(rawMessage, httpStatus));
+      }
       setCanPreviewSampleResult(isAiCapacityError(rawMessage, httpStatus));
     } finally {
       setSubmitting(false);
+      setSubmitProgress("");
     }
   };
 
@@ -624,6 +644,12 @@ function CareerTestPage() {
         {error ? (
           <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
             {error}
+          </div>
+        ) : null}
+
+        {submitting && submitProgress ? (
+          <div className="mb-6 rounded-2xl border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-sm text-sky-100">
+            {submitProgress}
           </div>
         ) : null}
 
