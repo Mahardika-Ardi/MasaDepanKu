@@ -49,11 +49,14 @@ function normalizeRaport(raport) {
 }
 
 function mapProfile(payload) {
+  const detail = payload?.profil_detail ?? payload?.profilDetail;
+  const photoPath = payload?.photo_path ?? payload?.photoProfiles?.file ?? null;
+
   return {
-    photo_path: payload?.photo_path ?? null,
+    photo_path: photoPath,
     profil_detail: {
-      jurusan: payload?.profil_detail?.jurusan ?? "Belum diisi",
-      raport: normalizeRaport(payload?.profil_detail?.raport),
+      jurusan: detail?.jurusan ?? "Belum diisi",
+      raport: normalizeRaport(detail?.raport ?? detail?.raportScore),
     },
   };
 }
@@ -84,21 +87,15 @@ async function fetchProfile(token) {
   let lastMessage = "Gagal mengambil data profil";
 
   for (const endpoint of endpoints) {
-    let response;
-
-    try {
-      const requestUrl = `${API_BASE_URL}${endpoint}?t=${Date.now()}`;
-      response = await fetch(requestUrl, {
-        cache: "no-store",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Cache-Control": "no-cache",
-          Pragma: "no-cache",
-        },
-      });
-    } catch (error) {
-      throw error;
-    }
+    const requestUrl = `${API_BASE_URL}${endpoint}?t=${Date.now()}`;
+    const response = await fetch(requestUrl, {
+      cache: "no-store",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+      },
+    });
 
     const raw = await response.text();
     const data = safeParseJson(raw);
@@ -275,12 +272,16 @@ function ProfilePage() {
       setRaport(normalizeRaport(mapped.profil_detail.raport));
       setImageCacheKey(Date.now());
 
-      const freshInfo = await fetchProfile(token);
-      const freshMapped = mapProfile(freshInfo);
-      setProfile(freshMapped);
-      setJurusan(freshMapped.profil_detail.jurusan === "Belum diisi" ? "" : freshMapped.profil_detail.jurusan);
-      setRaport(normalizeRaport(freshMapped.profil_detail.raport));
-      setImageCacheKey(Date.now());
+      try {
+        const freshInfo = await fetchProfile(token);
+        const freshMapped = mapProfile(freshInfo);
+        setProfile(freshMapped);
+        setJurusan(freshMapped.profil_detail.jurusan === "Belum diisi" ? "" : freshMapped.profil_detail.jurusan);
+        setRaport(normalizeRaport(freshMapped.profil_detail.raport));
+        setImageCacheKey(Date.now());
+      } catch {
+        // Keep the successful update response as source of truth if refresh fails.
+      }
 
       setPhotoFile(null);
       setPreviewUrl("");

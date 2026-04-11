@@ -76,14 +76,17 @@ function normalizeRaport(raport) {
 }
 
 function mapProfile(payload) {
+  const detail = payload?.profil_detail ?? payload?.profilDetail;
+  const photoPath = payload?.photo_path ?? payload?.photoProfiles?.file ?? null;
+
   return {
     user: {
       name: payload?.user?.name ?? fallbackProfile.user.name,
     },
-    photo_path: payload?.photo_path ?? null,
+    photo_path: photoPath,
     profil_detail: {
-      jurusan: payload?.profil_detail?.jurusan ?? "Belum diisi",
-      raport: normalizeRaport(payload?.profil_detail?.raport),
+      jurusan: detail?.jurusan ?? "Belum diisi",
+      raport: normalizeRaport(detail?.raport ?? detail?.raportScore),
     },
   };
 }
