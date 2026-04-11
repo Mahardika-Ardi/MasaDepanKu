@@ -1,9 +1,18 @@
 import prisma from "../config/prisma.js";
+import redis from "../config/redis.js";
 import prismaErrors from "../utils/prisma_errors.js";
 
 class QuestionRepository {
   async create(id, question) {
+    const cachedKey = `user:${id}`;
+
     try {
+      const cached = await redis.get(cachedKey);
+
+      if (cached) {
+        return JSON.parse(cached);
+      }
+
       const result = await prisma.testSession.create({
         data: {
           userId: id,
@@ -25,6 +34,10 @@ class QuestionRepository {
           },
         },
       });
+
+      if (result) {
+        await redis.set(cachedKey, JSON.stringify(result), "EX", 60);
+      }
 
       return result;
     } catch (error) {
