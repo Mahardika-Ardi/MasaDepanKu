@@ -1,28 +1,54 @@
 # Frontend MasaDepanKu
 
-Frontend **MasaDepanKu** adalah aplikasi React berbasis Vite yang menyediakan antarmuka autentikasi pengguna (register/login) dan menjadi fondasi UI untuk fitur-fitur pengembangan berikutnya.
+Frontend MasaDepanKu adalah aplikasi web berbasis **React + Vite** yang menjadi antarmuka utama pengguna untuk login, melihat profil, dan menjalankan alur tes karier.
 
 ---
 
-## Tujuan Frontend
+## Daftar Isi
 
-Aplikasi ini dirancang untuk:
+1. [Fitur](#fitur)
+2. [Halaman Utama](#halaman-utama)
+3. [Tech Stack](#tech-stack)
+4. [Struktur Folder](#struktur-folder)
+5. [Konfigurasi Environment](#konfigurasi-environment)
+6. [Menjalankan Frontend](#menjalankan-frontend)
+7. [Scripts](#scripts)
+8. [Integrasi API](#integrasi-api)
+9. [Alur Auth](#alur-auth)
+10. [Troubleshooting](#troubleshooting)
 
-- memberikan alur registrasi pengguna yang sederhana,
-- menangani login dan penyimpanan token autentikasi,
-- menjadi titik integrasi ke API backend MasaDepanKu.
+---
 
-Saat ini fokus utama ada di halaman autentikasi dengan UI gelap modern menggunakan Tailwind CSS.
+## Fitur
+
+- Halaman register dan login pengguna.
+- Protected route berbasis token.
+- Halaman beranda (`/beranda`) dengan data profil user.
+- Halaman profil (`/profile`) dan alur tes karier (`/jelajah-karir`, `/career-test`).
+- Penyimpanan token login pada `localStorage`.
+- Integrasi API backend untuk autentikasi, profil, dan endpoint terkait.
+- **Indikator status backend** di beranda melalui endpoint `GET /health`.
+
+---
+
+## Halaman Utama
+
+- `/register` → form registrasi user baru.
+- `/login` → form autentikasi.
+- `/beranda` → dashboard sederhana + ringkasan profil + status backend.
+- `/profile` → detail profil pengguna.
+- `/jelajah-karir` → intro tes karier.
+- `/career-test` → halaman pengerjaan tes.
 
 ---
 
 ## Tech Stack
 
-- **React 19**
-- **Vite 8**
-- **React Router DOM 7**
-- **Tailwind CSS 3**
-- **ESLint 9**
+- React 19
+- React Router DOM
+- Vite
+- Tailwind CSS
+- ESLint
 
 ---
 
@@ -31,73 +57,38 @@ Saat ini fokus utama ada di halaman autentikasi dengan UI gelap modern menggunak
 ```bash
 frontend/
 ├── public/
-│   ├── favicon.svg
-│   └── icons.svg
 ├── src/
 │   ├── assets/
 │   ├── pages/
+│   │   ├── HomePage.jsx
 │   │   ├── LoginPage.jsx
-│   │   └── RegisterPage.jsx
+│   │   ├── ProfilePage.jsx
+│   │   ├── RegisterPage.jsx
+│   │   ├── CareerTestIntroPage.jsx
+│   │   ├── CareerTestPage.jsx
+│   │   └── RequireAuth.jsx
+│   ├── utils/
+│   │   └── apiBaseUrl.js
 │   ├── App.jsx
 │   ├── index.css
 │   └── main.jsx
-├── index.html
-├── package.json
-├── postcss.config.js
-├── tailwind.config.js
-└── vite.config.js
+└── README.md
 ```
-
----
-
-## Fitur yang Sudah Tersedia
-
-- **Routing dasar**:
-  - `/` → redirect ke `/register`
-  - `/register` → halaman registrasi
-  - `/login` → halaman login
-- **Form register** dengan validasi sederhana di sisi client.
-- **Form login** yang mengirim kredensial ke backend.
-- **Penyimpanan token** login ke `localStorage`.
-- **Feedback status** (loading/sukses/gagal) pada submit form.
-
----
-
-## Prasyarat
-
-Sebelum menjalankan frontend, pastikan:
-
-- Node.js (LTS disarankan)
-- npm
-- backend MasaDepanKu sudah berjalan
 
 ---
 
 ## Konfigurasi Environment
 
-Buat file `.env` di folder `frontend/` dengan isi minimal:
+Buat file `frontend/.env`:
 
 ```env
 VITE_API_URL=http://localhost:3000
 ```
 
-> Gunakan URL backend tanpa trailing slash agar endpoint fetch tetap konsisten.
+Catatan:
 
----
-
-## Instalasi
-
-Dari root monorepo:
-
-```bash
-npm install
-```
-
-Atau khusus frontend:
-
-```bash
-npm install -w frontend
-```
+- Nilai ini dipakai sebagai base URL API.
+- Jika kosong, aplikasi akan fallback ke `/api`.
 
 ---
 
@@ -109,92 +100,70 @@ Dari root monorepo:
 npm run start:fe
 ```
 
-Atau langsung di workspace frontend:
+Atau dari workspace frontend:
 
 ```bash
 npm run dev -w frontend
 ```
 
-Aplikasi akan berjalan (default) di:
+Default local URL:
 
 - `http://localhost:5173`
 
 ---
 
-## Daftar Script Frontend
+## Scripts
 
-- `npm run dev -w frontend` → jalankan development server Vite
+- `npm run dev -w frontend` → development server
 - `npm run build -w frontend` → build produksi
 - `npm run preview -w frontend` → preview hasil build
-- `npm run lint -w frontend` → jalankan ESLint
-
-Jika Anda sudah berada di folder `frontend/`, script yang setara:
-
-- `npm run dev`
-- `npm run build`
-- `npm run preview`
-- `npm run lint`
+- `npm run lint -w frontend` → lint source
 
 ---
 
-## Integrasi API (Ringkas)
+## Integrasi API
 
-Frontend melakukan request ke backend untuk endpoint:
+Contoh endpoint yang dipakai frontend:
 
 - `POST /auth/register`
 - `POST /auth/login`
+- `GET /profile/getSpecificProfile`
+- `GET /health`
 
-Kebutuhan backend:
-
-- CORS mengizinkan origin frontend
-- endpoint auth aktif
-- format response konsisten (`Success`, `Message`, `Information`)
+Pastikan backend mengizinkan origin frontend melalui CORS.
 
 ---
 
-## UX Notes
+## Alur Auth
 
-- UI menggunakan tema gelap dengan gaya form yang konsisten.
-- Halaman register menyediakan tombol placeholder “Masuk dengan Google” (belum terhubung OAuth).
-- Setelah register sukses, user diarahkan otomatis ke halaman login.
+1. User login dari halaman `/login`.
+2. Token dari response backend disimpan di `localStorage`.
+3. Route private dibungkus komponen `RequireAuth`.
+4. Request API protected mengirim header:
 
----
+```http
+Authorization: Bearer <token>
+```
 
-## Pengembangan Lanjutan (Saran)
-
-- Tambahkan state management untuk sesi user (context/store).
-- Tambahkan protected route setelah login.
-- Tambahkan halaman dashboard setelah autentikasi.
-- Tambahkan test (React Testing Library / Vitest).
-- Tambahkan notifikasi toast untuk feedback UX yang lebih baik.
+5. Saat token invalid/expired, user diarahkan kembali ke halaman login.
 
 ---
 
 ## Troubleshooting
 
-### 1) Gagal fetch ke backend
+### 1) Frontend gagal fetch API
 
-Periksa:
+- cek backend aktif di URL yang benar
+- cek `VITE_API_URL`
+- cek konfigurasi CORS backend
 
-- `VITE_API_URL` di `.env`
-- backend berjalan di URL yang benar
-- konfigurasi CORS backend
+### 2) Halaman private redirect terus ke login
 
-### 2) Token tidak tersimpan
+- token tidak tersimpan
+- token expired
+- format response login berubah
 
-Periksa output network/browser console, lalu pastikan response login mengandung token di `Information.token`.
+### 3) Status backend di beranda selalu offline
 
-### 3) Perubahan style tidak muncul
-
-Pastikan server dev aktif, simpan file, dan cek apakah Tailwind class tidak typo.
-
----
-
-## Kontribusi
-
-Silakan buat issue/PR untuk:
-
-- peningkatan UI/UX,
-- perbaikan validasi form,
-- refactor struktur komponen,
-- integrasi fitur frontend berikutnya.
+- endpoint `GET /health` tidak tersedia / backend mati
+- URL API frontend salah
