@@ -1,15 +1,58 @@
-# MasaDepanKu.id
+# MasaDepanKu
 
-MasaDepanKu adalah aplikasi **web fullstack** untuk membantu pengguna mempersiapkan arah masa depan melalui proses:
+MasaDepanKu adalah aplikasi **fullstack web** untuk membantu pelajar mengenali potensi diri, melakukan tes minat-bakat, dan mendapatkan insight karier berbasis data profil serta AI.
 
-- registrasi & login,
-- manajemen data pengguna,
-- dan pembuatan pertanyaan berbasis AI (Gemini) untuk eksplorasi minat/kemampuan.
+Project ini menggunakan arsitektur **monorepo npm workspace**:
 
-Project ini menggunakan arsitektur **monorepo npm workspaces** dengan dua aplikasi utama:
+- `backend/` → REST API (Express + Prisma + MariaDB/MySQL)
+- `frontend/` → Web client (React + Vite + Tailwind)
 
-- `backend` → REST API (Express + Prisma + MySQL)
-- `frontend` → UI (React + Vite + Tailwind CSS)
+---
+
+## Daftar Isi
+
+1. [Ringkasan Fitur](#ringkasan-fitur)
+2. [Arsitektur Monorepo](#arsitektur-monorepo)
+3. [Tech Stack](#tech-stack)
+4. [Quick Start](#quick-start)
+5. [Konfigurasi Environment](#konfigurasi-environment)
+6. [Menjalankan Aplikasi](#menjalankan-aplikasi)
+7. [Daftar Script](#daftar-script)
+8. [Endpoint Penting](#endpoint-penting)
+9. [Alur Pengguna](#alur-pengguna)
+10. [Troubleshooting](#troubleshooting)
+11. [Roadmap Pengembangan](#roadmap-pengembangan)
+
+---
+
+## Ringkasan Fitur
+
+- ✅ Registrasi dan login pengguna (JWT).
+- ✅ Proteksi endpoint menggunakan middleware autentikasi.
+- ✅ Profil pengguna + data akademik dasar (jurusan, nilai raport).
+- ✅ Pembuatan pertanyaan/analisis berbasis AI (Gemini).
+- ✅ Halaman beranda React dengan integrasi API profil.
+- ✅ **Health check endpoint backend** (`GET /health`) untuk monitoring konektivitas.
+- ✅ **Status koneksi backend di frontend** (ditampilkan di halaman beranda).
+- ✅ Dokumentasi API melalui Swagger UI.
+
+---
+
+## Arsitektur Monorepo
+
+```bash
+MasaDepanKu/
+├── backend/                # Express API + Prisma
+│   ├── prisma/
+│   ├── src/
+│   └── README.md
+├── frontend/               # React + Vite UI
+│   ├── public/
+│   ├── src/
+│   └── README.md
+├── package.json            # workspace scripts
+└── README.md
+```
 
 ---
 
@@ -18,11 +61,10 @@ Project ini menggunakan arsitektur **monorepo npm workspaces** dengan dua aplika
 ### Backend
 
 - Node.js + Express 5
-- Prisma ORM + MariaDB adapter
-- JWT (auth)
-- Zod (validasi DTO)
-- Swagger (dokumentasi API)
-- Google Gemini API (`@google/genai`)
+- Prisma ORM + MariaDB/MySQL
+- JWT, bcrypt, Zod
+- Swagger (`swagger-jsdoc`, `swagger-ui-express`)
+- Google GenAI (`@google/genai`)
 
 ### Frontend
 
@@ -31,7 +73,7 @@ Project ini menggunakan arsitektur **monorepo npm workspaces** dengan dua aplika
 - Vite
 - Tailwind CSS
 
-### Monorepo / Tools
+### Tooling
 
 - npm workspaces
 - concurrently
@@ -39,197 +81,159 @@ Project ini menggunakan arsitektur **monorepo npm workspaces** dengan dua aplika
 
 ---
 
-## Struktur Project
+## Quick Start
 
 ```bash
-MasaDepanKu/
-├── backend/
-│   ├── prisma/
-│   └── src/
-│       ├── ai/
-│       ├── bootstrap/
-│       ├── config/
-│       ├── controller/
-│       ├── dto/
-│       ├── middlewares/
-│       ├── routes/
-│       ├── services/
-│       └── utils/
-├── frontend/
-│   ├── public/
-│   └── src/
-│       ├── assets/
-│       └── pages/
-├── package.json
-└── README.md
-```
-
----
-
-## Fitur Utama
-
-- Autentikasi pengguna (register & login).
-- Proteksi endpoint menggunakan JWT bearer token.
-- Role-based dan ownership check untuk endpoint user tertentu.
-- Generate pertanyaan berbasis AI (Gemini).
-- Dokumentasi API otomatis via Swagger.
-- UI halaman register & login yang siap dipakai.
-
----
-
-## Prasyarat
-
-Pastikan environment Anda sudah memiliki:
-
-- Node.js (disarankan versi LTS terbaru)
-- npm
-- Database MySQL/MariaDB aktif
-- API key Gemini
-
----
-
-## Instalasi
-
-Dari root project:
-
-```bash
+# 1) Install dependency root + seluruh workspace
 npm install
+
+# 2) Jalankan backend + frontend bersamaan
+npm run dev
 ```
 
-Instalasi ini akan menginstal dependency untuk workspace root, backend, dan frontend.
+Akses default:
+
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:3000`
+- Swagger: `http://localhost:3000/api-documentation`
+- Health check: `http://localhost:3000/health`
 
 ---
 
 ## Konfigurasi Environment
 
-Buat file `.env` di folder `backend/`.
-
-Contoh minimal:
+### 1) Backend (`backend/.env`)
 
 ```env
-# Backend
 PORT=3000
 FRONTEND_URL=http://localhost:5173
-JWT_SECRET=ganti_dengan_secret_yang_aman
+JWT_SECRET=replace_with_secure_secret
 
-# Database (dipakai PrismaMariaDb adapter di runtime app)
+# Runtime DB config
 DATABASE_HOST=localhost
 DATABASE_USER=root
 DATABASE_NAME=masadepanku
 
-# Prisma migrations / prisma CLI
+# Prisma CLI/migration
 DATABASE_URL="mysql://root:password@localhost:3306/masadepanku"
 
 # AI
-GEMINI_API_KEY=isi_api_key_gemini
+GEMINI_API_KEY=your_gemini_key
 ```
 
-> Catatan: project saat ini membaca konfigurasi database dengan dua pola:
->
-> - runtime app via `DATABASE_HOST`, `DATABASE_USER`, `DATABASE_NAME`
-> - prisma CLI/migration via `DATABASE_URL`
+### 2) Frontend (`frontend/.env`)
+
+```env
+VITE_API_URL=http://localhost:3000
+```
+
+> Gunakan URL backend **tanpa trailing slash** untuk menghindari duplikasi path.
 
 ---
 
-## Menjalankan Project
+## Menjalankan Aplikasi
 
-### Jalankan backend + frontend sekaligus
+### Opsi A — dari root (disarankan)
 
 ```bash
 npm run dev
 ```
 
-### Jalankan terpisah
+### Opsi B — jalankan terpisah
 
 ```bash
 npm run start:be
 npm run start:fe
 ```
 
-Default URL:
-
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:3000`
-- Swagger API docs: `http://localhost:3000/api-documentation`
-
 ---
 
-## Script yang Tersedia
+## Daftar Script
 
 ### Root
 
-- `npm run dev` → jalankan backend & frontend bersamaan.
-- `npm run start:be` → jalankan backend mode development.
-- `npm run start:fe` → jalankan frontend mode development.
+- `npm run dev` → menjalankan backend + frontend bersamaan
+- `npm run start:be` → menjalankan backend (`nodemon`)
+- `npm run start:fe` → menjalankan frontend (`vite`)
+- `npm run lint` → lint backend dan frontend
 
-### Backend (`backend/package.json`)
+### Backend
 
-- `npm run start`
-- `npm run start:dev`
-- `npm run start:watch`
-- `npm run lint`
-- `npm run lint:fix`
+- `npm run start -w backend`
+- `npm run start:dev -w backend`
+- `npm run lint -w backend`
+- `npm run lint:fix -w backend`
+- `npm run prisma:deploy -w backend`
 
-### Frontend (`frontend/package.json`)
+### Frontend
 
-- `npm run dev`
-- `npm run build`
-- `npm run preview`
-- `npm run lint`
+- `npm run dev -w frontend`
+- `npm run build -w frontend`
+- `npm run preview -w frontend`
+- `npm run lint -w frontend`
 
 ---
 
-## Ringkasan Endpoint API
+## Endpoint Penting
 
-Prefix endpoint mengikuti route yang terdaftar di backend:
+### Public
 
-### Auth
-
+- `GET /` → sanity check sederhana
+- `GET /health` → status backend (uptime, timestamp, environment)
 - `POST /auth/register`
 - `POST /auth/login`
 
-### Users
+### Protected (contoh)
 
+- `GET /profile/getSpecificProfile`
 - `GET /users/getUsers`
-- `GET /users/getSpecificUser`
-- `PATCH /users/updateUsers/:id`
-- `DELETE /users/deleteUser/:id`
-
-### Question
-
 - `POST /question/create`
 
-Untuk detail schema request/response, gunakan Swagger UI.
+Untuk detail payload request/response lengkap, gunakan Swagger UI.
 
 ---
 
-## Alur Singkat Penggunaan
+## Alur Pengguna
 
-1. User melakukan register.
-2. User login dan menerima JWT token.
-3. Token disimpan (contoh saat ini: `localStorage` di frontend).
-4. Frontend mengirim token lewat header `Authorization: Bearer <token>` ke endpoint yang diproteksi.
-5. User dapat meminta generate pertanyaan via endpoint question.
-
----
-
-## Catatan Pengembangan
-
-- Repo ini masih aktif dikembangkan; beberapa modul dapat berubah.
-- Disarankan menambahkan:
-  - `.env.example`
-  - test otomatis (unit/integration)
-  - CI lint + test
-  - hardening keamanan (rate limit, input sanitization tambahan, dsb.)
+1. User melakukan registrasi akun.
+2. User login untuk memperoleh token JWT.
+3. Frontend menyimpan token (saat ini di `localStorage`).
+4. Frontend mengirim token melalui header `Authorization: Bearer <token>`.
+5. User mengakses profil, tes karier, dan fitur AI berdasarkan endpoint yang tersedia.
 
 ---
 
-## Lisensi
+## Troubleshooting
 
-Belum ditentukan.
+### Backend tidak bisa diakses frontend
+
+- Pastikan backend hidup di port yang benar.
+- Pastikan `FRONTEND_URL` backend sesuai origin frontend.
+- Pastikan `VITE_API_URL` frontend benar.
+
+### Endpoint profile gagal 401
+
+- Token tidak ada / expired.
+- Login ulang untuk mendapatkan token baru.
+
+### Swagger kosong / error
+
+- Cek startup log backend.
+- Pastikan route dokumentasi di `/api-documentation`.
 
 ---
 
-## Kontributor
+## Roadmap Pengembangan
 
-Silakan buat issue/PR untuk perbaikan bug, peningkatan dokumentasi, atau fitur baru.
+- [ ] Tambah unit/integration test backend.
+- [ ] Tambah e2e test frontend.
+- [ ] Tambah observability (structured logging + metrics).
+- [ ] Tambah CI lint/test/build.
+- [ ] Lengkapi dokumentasi deployment production.
+
+---
+
+## Dokumentasi Per Workspace
+
+- Panduan backend detail: [`backend/README.md`](./backend/README.md)
+- Panduan frontend detail: [`frontend/README.md`](./frontend/README.md)
