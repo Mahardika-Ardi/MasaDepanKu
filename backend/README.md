@@ -1,62 +1,78 @@
 # Backend MasaDepanKu
 
-Backend **MasaDepanKu** adalah REST API berbasis Express untuk menangani autentikasi, manajemen user, dan pembuatan pertanyaan berbasis AI (Gemini).
-
-Backend ini dibangun untuk bekerja bersama frontend MasaDepanKu dalam arsitektur monorepo.
+Backend MasaDepanKu adalah layanan REST API berbasis **Express** untuk autentikasi, manajemen user/profile, sesi tes, serta integrasi AI (Gemini) pada fitur pertanyaan dan analisis karier.
 
 ---
 
-## Fitur Utama
+## Daftar Isi
 
-- **Auth API**: register & login dengan JWT.
-- **User API**: ambil list user, ambil user spesifik, update, dan hapus.
-- **Authorization middleware**:
-  - verifikasi token Bearer
-  - role-based access control
-  - ownership check untuk endpoint tertentu
-- **AI Question API**: generate pertanyaan menggunakan Gemini API.
-- **Swagger docs**: dokumentasi endpoint otomatis.
-- **Prisma ORM** untuk akses database MySQL/MariaDB.
-
----
-
-## Tech Stack
-
-- Node.js
-- Express 5
-- Prisma ORM + `@prisma/adapter-mariadb`
-- MySQL/MariaDB
-- Zod (validasi DTO)
-- JWT (`jsonwebtoken`)
-- Bcrypt
-- Swagger (`swagger-jsdoc`, `swagger-ui-express`)
-- Google GenAI (`@google/genai`)
+1. [Fitur](#fitur)
+2. [Arsitektur Singkat](#arsitektur-singkat)
+3. [Struktur Folder](#struktur-folder)
+4. [Prasyarat](#prasyarat)
+5. [Environment Variables](#environment-variables)
+6. [Menjalankan Backend](#menjalankan-backend)
+7. [Scripts](#scripts)
+8. [Health Check](#health-check)
+9. [Dokumentasi API](#dokumentasi-api)
+10. [Ringkasan Endpoint](#ringkasan-endpoint)
+11. [Catatan Keamanan](#catatan-keamanan)
+12. [Troubleshooting](#troubleshooting)
 
 ---
 
-## Struktur Folder (Backend)
+## Fitur
+
+- Auth API (`register`, `login`) berbasis JWT.
+- User API (list, detail, update, delete).
+- Profile API untuk data profil dan nilai raport.
+- Question / Analysis API terintegrasi Gemini.
+- Middleware proteksi endpoint:
+  - verifikasi token
+  - role check
+  - ownership check
+- Upload middleware untuk kebutuhan berkas/foto.
+- Swagger docs untuk eksplorasi endpoint.
+- **Endpoint health check** untuk pemantauan status service.
+
+---
+
+## Arsitektur Singkat
+
+Backend disusun modular per domain:
+
+- `*.routes.js` → definisi endpoint
+- `*.controller.js` → handler request/response
+- `*.service.js` → business logic
+- `*.repository.js` → akses database (Prisma)
+- `dto/` → validasi payload (Zod)
+
+Route-loader melakukan auto-discovery file `*.routes.js` di dalam `src/` dan memasangnya berdasarkan nama folder.
+
+---
+
+## Struktur Folder
 
 ```bash
 backend/
 ├── prisma/
 │   ├── migrations/
 │   └── schema.prisma
+├── scripts/
 ├── src/
 │   ├── ai/
-│   │   ├── client/
-│   │   ├── prompts/
-│   │   └── schemas/
+│   ├── analysis/
+│   ├── auth/
 │   ├── bootstrap/
 │   ├── config/
-│   ├── controller/
-│   ├── dto/
 │   ├── middlewares/
-│   ├── routes/
-│   ├── services/
-│   ├── utils/
+│   ├── profile/
+│   ├── question/
+│   ├── testsession/
+│   ├── user/
+│   ├── useranswer/
 │   ├── app.js
 │   └── server.js
-├── package.json
 └── README.md
 ```
 
@@ -64,101 +80,113 @@ backend/
 
 ## Prasyarat
 
-Sebelum menjalankan backend:
-
-- Node.js (LTS disarankan)
+- Node.js (LTS)
 - npm
-- Database MySQL/MariaDB aktif
-- Gemini API key
+- Database MariaDB/MySQL aktif
+- Gemini API key (untuk fitur AI)
 
 ---
 
-## Konfigurasi Environment
+## Environment Variables
 
-Buat file `.env` di direktori `backend/`.
-
-Contoh minimal:
+Buat file `backend/.env`:
 
 ```env
-# Server
 PORT=3000
 FRONTEND_URL=http://localhost:5173
+JWT_SECRET=replace_with_secure_secret
 
-# Security
-JWT_SECRET=ganti_dengan_secret_aman
-
-# Database (dipakai runtime app / Prisma MariaDB adapter)
 DATABASE_HOST=localhost
 DATABASE_USER=root
 DATABASE_NAME=masadepanku
-
-# Prisma CLI / migrations
 DATABASE_URL="mysql://root:password@localhost:3306/masadepanku"
 
-# AI
-GEMINI_API_KEY=isi_api_key_gemini
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
-> Catatan penting:
->
-> - Runtime koneksi DB menggunakan `DATABASE_HOST`, `DATABASE_USER`, dan `DATABASE_NAME`.
-> - Perintah Prisma migration/CLI membaca `DATABASE_URL`.
+Keterangan:
 
----
-
-## Instalasi
-
-Dari root monorepo:
-
-```bash
-npm install
-```
-
-Atau khusus backend:
-
-```bash
-npm install -w backend
-```
+- `DATABASE_HOST`, `DATABASE_USER`, `DATABASE_NAME` dipakai koneksi runtime aplikasi.
+- `DATABASE_URL` dipakai perintah Prisma CLI (migrasi/deploy).
 
 ---
 
 ## Menjalankan Backend
 
-### Dari root monorepo
+Dari root monorepo:
 
 ```bash
 npm run start:be
 ```
 
-### Dari workspace backend
+Atau langsung dari workspace backend:
 
 ```bash
 npm run start -w backend
 npm run start:dev -w backend
 ```
 
-Default endpoint:
+Default URL:
 
-- API base: `http://localhost:3000`
-- Swagger UI: `http://localhost:3000/api-documentation`
+- API: `http://localhost:3000`
+- Swagger: `http://localhost:3000/api-documentation`
+- Health: `http://localhost:3000/health`
 
 ---
 
-## Scripts Backend
+## Scripts
 
-- `npm run start -w backend` → jalankan server normal
-- `npm run start:dev -w backend` → jalankan dengan nodemon
-- `npm run start:watch -w backend` → watch mode
-- `npm run lint -w backend` → lint seluruh source backend
+- `npm run start -w backend` → run server normal
+- `npm run start:dev -w backend` → run dengan nodemon
+- `npm run start:watch -w backend` → mode watch
+- `npm run lint -w backend` → lint source
 - `npm run lint:fix -w backend` → lint + auto-fix
+- `npm run prisma:deploy -w backend` → deploy migration
+- `npm run make -w backend` → utility generate script internal
 
-Jika berada di folder `backend/`, gunakan:
+---
 
-- `npm run start`
-- `npm run start:dev`
-- `npm run start:watch`
-- `npm run lint`
-- `npm run lint:fix`
+## Health Check
+
+Endpoint:
+
+```http
+GET /health
+```
+
+Contoh response:
+
+```json
+{
+  "success": true,
+  "message": "MasaDepanKu backend is healthy",
+  "timestamp": "2026-04-13T00:00:00.000Z",
+  "uptime": 123.45,
+  "environment": "development"
+}
+```
+
+Use case:
+
+- verifikasi service hidup dari frontend
+- readiness/liveness probe di deployment
+- monitoring sederhana dari tool eksternal
+
+---
+
+## Dokumentasi API
+
+Swagger UI tersedia di:
+
+```text
+http://localhost:3000/api-documentation
+```
+
+Gunakan Swagger untuk:
+
+- melihat daftar endpoint terbaru
+- memeriksa schema request/response
+- mencoba request langsung dari browser
 
 ---
 
@@ -169,115 +197,48 @@ Jika berada di folder `backend/`, gunakan:
 - `POST /auth/register`
 - `POST /auth/login`
 
-### Users
+### User
 
 - `GET /users/getUsers`
 - `GET /users/getSpecificUser`
 - `PATCH /users/updateUsers/:id`
 - `DELETE /users/deleteUser/:id`
 
-### Question
+### Profile
+
+- `GET /profile/getSpecificProfile`
+- endpoint profile lain tersedia di Swagger
+
+### Question / Analysis
 
 - `POST /question/create`
-
-Untuk request/response schema detail, cek Swagger.
-
----
-
-## Authentication & Authorization
-
-### Header yang dipakai
-
-Untuk endpoint terproteksi:
-
-```http
-Authorization: Bearer <jwt_token>
-```
-
-### Mekanisme akses
-
-- `verifyMiddleware` memvalidasi JWT.
-- `roleCheck(...)` membatasi endpoint berdasarkan role (`ADMIN` / `USER`).
-- `ownerShipCheck` memastikan user hanya memodifikasi data yang diizinkan.
+- endpoint analysis tersedia di Swagger
 
 ---
 
-## Database (Prisma)
+## Catatan Keamanan
 
-Skema utama mencakup model:
-
-- `Users`
-- `PhotoProfile`
-- `ProfilDetail`
-- `GroupQuestion`
-- `Question`
-- `UserAnswer`
-
-Enum penting:
-
-- `Role`: `USER`, `ADMIN`
-- `Category`: `teknis`, `sosial`, `kreatif`, `analitis`, `manajerial`
-
-Jika Anda menambah/mengubah schema:
-
-```bash
-npx prisma migrate dev --schema prisma/schema.prisma
-npx prisma generate --schema prisma/schema.prisma
-```
-
-Jalankan command tersebut dari folder `backend/`.
-
----
-
-## AI Question Flow (Ringkas)
-
-1. Endpoint `POST /question/create` dipanggil dengan `user_id`.
-2. Service membuat `GroupQuestion` baru untuk user.
-3. Backend memanggil Gemini melalui `@google/genai`.
-4. Output divalidasi dengan Zod schema.
-5. Pertanyaan disimpan ke database.
-
----
-
-## Error Handling
-
-Backend menggunakan error handler middleware global untuk menangani error terpusat setelah route diproses.
+- Simpan `JWT_SECRET` di environment, jangan hard-code.
+- Jangan commit file `.env` ke repository.
+- Batasi origin CORS via `FRONTEND_URL`.
+- Validasi payload input tetap wajib di level DTO/service.
 
 ---
 
 ## Troubleshooting
 
-### 1) Server gagal start karena Gemini key
+### 1) Koneksi database gagal
 
-Pastikan `GEMINI_API_KEY` sudah terisi valid di `.env`.
+- cek service MariaDB/MySQL berjalan
+- cek `DATABASE_HOST`, `DATABASE_USER`, `DATABASE_NAME`
+- jalankan migration yang dibutuhkan
 
-### 2) Koneksi database gagal
+### 2) Endpoint protected selalu 401
 
-Periksa:
+- pastikan header `Authorization: Bearer <token>` benar
+- cek token expired
 
-- host/user/db name (`DATABASE_HOST`, `DATABASE_USER`, `DATABASE_NAME`)
-- kredensial di `DATABASE_URL` untuk Prisma CLI
-- service MySQL/MariaDB aktif
+### 3) Fitur AI gagal
 
-### 3) 401 Unauthorized
-
-Periksa:
-
-- header `Authorization` format `Bearer <token>`
-- token belum expired
-- `JWT_SECRET` konsisten saat sign & verify
-
----
-
-## Rekomendasi Lanjutan
-
-- Tambahkan `.env.example` khusus backend.
-- Tambahkan automated test (unit + integration).
-- Tambahkan rate limiting dan hardening security.
-- Rapikan standar response/error agar konsisten lintas controller.
-
----
-
-## Kontribusi
-
-Silakan buat issue/PR untuk peningkatan performa, keamanan, dokumentasi, dan fitur backend lainnya.
+- pastikan `GEMINI_API_KEY` valid
+- cek quota / limit provider
